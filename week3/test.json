@@ -1,0 +1,61 @@
+{
+  "ion": "88Sr+",
+  "unit": "cm$^{-1}$",
+  "levels": [
+    {
+      "label": "5s  2S1/2",
+      "energy": 0.0,
+      "zeeman": false
+    },
+    {
+      "label": "5p  2P1/2",
+      "energy": 23700.0,
+      "zeeman": false
+    },
+    {
+      "label": "5p  2P3/2",
+      "energy": 24510.0,
+      "zeeman": false
+    },
+    {
+      "label": "4d  2D3/2",
+      "energy": 14534.0,
+      "zeeman": false
+    },
+    {
+      "label": "4d  2D5/2",
+      "energy": 14844.0,
+      "zeeman": false
+    }
+  ],
+  "transitions": [
+    {
+      "from": "5s  2S1/2",
+      "to":   "5p  2P1/2",
+      "label":"422 nm",
+      "color":"purple",
+      "style":"solid"
+    },
+    {
+      "from": "5p  2P1/2",
+      "to":   "4d  2D3/2",
+      "label":"1092 nm",
+      "color":"orange",
+      "style":"dotted"
+    },
+    {
+      "from": "5p  2P3/2",
+      "to":   "4d  2D5/2",
+      "label":"1033 nm",
+      "color":"orange",
+      "style":"dotted"
+    },
+    {
+      "from": "5s  2S1/2",
+      "to":   "4d  2D5/2",
+      "label":"674 nm, 0.4 Hz",
+      "color":"red",
+      "style":"solid"
+    }
+  ]
+}
