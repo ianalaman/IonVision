@@ -3,17 +3,17 @@
   "unit": "cm^-1",
   "levels": [
     { "label": "5s 2S1/2",  "energy": 0,        "zeeman": true  },
-    { "label": "4d 2D3/2",  "energy": 14555.90, "zeeman": false },
+    { "label": "4d 2D3/2",  "energy": 14555.90, "zeeman": true  },
     { "label": "4d 2D5/2",  "energy": 14836.24, "zeeman": true  },
-    { "label": "5p 2P1/2",  "energy": 23715.19, "zeeman": false },
-    { "label": "5p 2P3/2",  "energy": 24516.65, "zeeman": false }
+    { "label": "5p 2P1/2",  "energy": 23715.19, "zeeman": true  },
+    { "label": "5p 2P3/2",  "energy": 24516.65, "zeeman": true  }
   ],
   "transitions": [
     {
       "from":       "5p 2P1/2",
       "to":         "5s 2S1/2",
       "wavelength": 422,
-      "label":      "422",
+      "label":      "422 nm",
       "color":      "purple",
       "reversible": true,
       "style":      "solid"
@@ -21,10 +21,8 @@
     {
       "from":       "4d 2D5/2",
       "to":         "5s 2S1/2",
-      "m_from":    -2.5,
-      "m_to":      -0.5,
       "wavelength": 674,
-      "label":      "674",
+      "label":      "674 nm",
       "color":      "red",
       "reversible": true,
       "style":      "solid"
@@ -33,8 +31,8 @@
       "from":       "5p 2P3/2",
       "to":         "4d 2D5/2",
       "wavelength": 1092,
-      "label":      "1092",
-      "color":      "gray",
+      "label":      "1092 nm",
+      "color":      "orange",
       "reversible": true,
       "style":      "solid"
     },
@@ -42,8 +40,8 @@
       "from":       "5p 2P1/2",
       "to":         "4d 2D3/2",
       "wavelength": 1033,
-      "label":      "1033",
-      "color":      "gray",
+      "label":      "1033 nm",
+      "color":      "orange",
       "reversible": true,
       "style":      "solid"
     }
