@@ -10,21 +10,26 @@ from scipy.constants import physical_constants, h, c
 μB = physical_constants["Bohr magneton"][0]
 hc = h * c
 # Constants
-LETTER_TO_COL = {'S': 0, 'P': 1, 'D': 2, 'F': 3}
+LETTER_TO_COL = {'S': 0, 'P': 0, 'D': 2, 'F': 3}
 
 
-# ---------- Helper Functions ----------
+##### ---------- HELPER FUNCTIONS ----------#######
 
-def infer_column(label: str, mapping: dict = LETTER_TO_COL) -> int:
+# ---------- Formatting Text Functions ----------
+    
+def format_ion_label(ion: str) -> str:
     """
-    Extract the term-symbol letter from a spectroscopic label
-    (e.g. '5p 2P3/2') and return its column index.
+    Convert a string like '88Sr+' into LaTeX-formatted
+    superscript label for matplotlib, e.g. '$^{88}\\mathrm{Sr}^{+}$'
     """
-    try:
-        letter = label.split()[1][1]
-        return mapping.get(letter, 0)
-    except (IndexError, KeyError):
-        return 0
+    import re
+    match = re.match(r"(\d+)([A-Za-z]+)([+-]\d*|\+|-)?", ion)
+    if match:
+        isotope, element, charge = match.groups()
+        charge = charge or ""
+        return fr"$^{{{isotope}}}\mathrm{{{element}}}^{{{charge}}}$"
+    else:
+        return ion
 
 
 def format_term_symbol(label: str) -> str:
@@ -42,6 +47,19 @@ def format_term_symbol(label: str) -> str:
     except ValueError:
         return label
 
+# ---------- Column Inference Functions ----------
+
+def infer_column(label: str, mapping: dict = LETTER_TO_COL) -> int:
+    """
+    Extract the term-symbol letter from a spectroscopic label
+    (e.g. '5p 2P3/2') and return its column index.
+    """
+    try:
+        letter = label.split()[1][1]
+        return mapping.get(letter, 0)
+    except (IndexError, KeyError):
+        return 0
+    
 
 def group_levels_by_column(levels: list) -> dict:
     """
@@ -54,7 +72,7 @@ def group_levels_by_column(levels: list) -> dict:
         cols.setdefault(col, []).append(lvl)
     return cols
 
-
+# ---------- Mapping Functions ----------
 def compute_x_map(groups: dict, spacing: float, bar_half: float, x_jitter: float) -> dict:
     """
     Spread the *sub*-levels horizontally, but keep the base-level
@@ -263,8 +281,10 @@ def draw_transitions(ax, transitions, x_map, y_map):
 def configure_axes(ax, data, x_map, y_map, spacing, show_axis, title_pad, ylabel_pad, left_margin):
     """
     Apply titles, labels, limits, and cosmetic settings to the plot axes.
-    """
-    ax.set_title(f"{data.get('ion','')} Energy Levels", pad=title_pad)
+    """ 
+    ion = data.get('ion', '')
+    ion_label = format_ion_label(ion)
+    ax.set_title(f"{ion_label} Energy Levels", pad=title_pad)
     ax.set_ylabel(f"Energy ({data.get('unit','cm$^{-1}$')})", labelpad=ylabel_pad)
     ax.set_xticks([])
 
@@ -287,8 +307,8 @@ def configure_axes(ax, data, x_map, y_map, spacing, show_axis, title_pad, ylabel
 
 
 def plot_energy_levels(data, B=0.0,
-                       spacing=0.5, bar_half=0.1,
-                       x_jitter=0.02,
+                       spacing=0.5, bar_half= 0.1,
+                       x_jitter=0.2,
                        y_jitter_normal=20000.0,
                        y_jitter_zeeman=10.0,
                        show_axis=False,
