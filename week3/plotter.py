@@ -147,6 +147,6 @@ def plot_energy_levels(
     ax.set_xlim(min(xvals)-spacing/2, max(xvals)+spacing/2)
     fig.subplots_adjust(left=left_margin, bottom=0.15)
     fig.tight_layout()
-    ax.set_ylim(-500, 13400)
+    ax.set_ylim(min(yvals)-1000*spacing, max(yvals))
 
     plt.show()

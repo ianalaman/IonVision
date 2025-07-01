@@ -5,7 +5,7 @@
     {
       "label": "5s  2S1/2",
       "energy": 0.0,
-      "zeeman": false
+      "zeeman": true
     },
     {
       "label": "5p  2P1/2",
@@ -25,7 +25,7 @@
     {
       "label": "4d  2D5/2",
       "energy": 14844.0,
-      "zeeman": false
+      "zeeman": true
     }
   ],
   "transitions": [
@@ -53,7 +53,7 @@
     {
       "from": "5s  2S1/2",
       "to":   "4d  2D5/2",
-      "label":"674 nm, 0.4 Hz",
+      "label":"674 nm",
       "color":"red",
       "style":"solid"
     }

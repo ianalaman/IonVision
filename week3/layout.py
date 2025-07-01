@@ -3,8 +3,13 @@
 from dataclasses import dataclass
 from typing import List, Dict
 import numpy as np
-
+from week3.style     import StyleConfig
 from .models import Level
+from collections import defaultdict
+from typing import Callable
+from .models import Level
+
+
 
 @dataclass
 class LayoutConfig:
@@ -25,7 +30,9 @@ class LayoutConfig:
     bar_half:         float = 0.1
     x_jitter:         float = 0.2
     y_jitter:         float = 20000.0
-
+    energy_group_key: Callable[[Level], int] = lambda lvl: int(lvl.energy // 10)
+    energy_group_y_scale: float = 3000000
+    sublevel_y_scale:     float = 1.0 
 
 def infer_column(level: Level, cfg: LayoutConfig) -> int:
     """
@@ -43,7 +50,6 @@ def infer_column(level: Level, cfg: LayoutConfig) -> int:
     except ValueError:
         return 0
 
-
 def compute_base_x_map(
     levels: List[Level],
     cfg: LayoutConfig
@@ -51,13 +57,16 @@ def compute_base_x_map(
     """
     Compute x-positions for *base* levels (sublevel == 0).
 
-    Within each column group:
-      1. Sort bases by energy ascending.
-      2. Place them left→right, each bar of width 2*bar_half,
-         starting with its left edge at (col*spacing).
-      3. Bar centers therefore at:
-           x = col*spacing + bar_half + i*(2*bar_half)
+    For each spectroscopic column (S, P, D, F...):
+      - Group base levels by unique energy (energy groups) within each column.
+      - For each energy group, spread all levels in the group out symmetrically
+        around the column center (not just the first at center).
+      - Bar centers at: x = col*spacing + (i - (n-1)/2) * 2*bar_half
+
+    All levels in an energy group are spread out, centered at the column center.
+    The grouping key function is provided by cfg.energy_group_key.
     """
+
     # Group base levels by column index
     cols: Dict[int, List[Level]] = {}
     for lvl in levels:
@@ -69,18 +78,30 @@ def compute_base_x_map(
     base_map: Dict[str, float] = {}
     bar_width = 2 * cfg.bar_half
 
+    # Use the grouping key function from config, or default to int(lvl.energy // 10000)
+    group_key = getattr(cfg, "energy_group_key", lambda lvl: int(lvl.energy // 10000))
+
     for col, bases in cols.items():
-        start_x = col * cfg.spacing
-        # sort by energy so bars stack sensibly left→right
-        ordered = sorted(bases, key=lambda L: L.energy)
-        for i, lvl in enumerate(ordered):
-            # left edge = start_x + i*bar_width
-            # center = left_edge + bar_half
-            center = start_x + cfg.bar_half + i * bar_width
-            base_map[lvl.label] = center
+        col_center = col * cfg.spacing
+        energy_groups: Dict[int, List[Level]] = defaultdict(list)
+        for lvl in bases:
+            key = group_key(lvl)
+            energy_groups[key].append(lvl)
+
+        # Sort groups by energy
+        for energy in sorted(energy_groups):
+            group = energy_groups[energy]
+            n = len(group)
+            # Spread all levels in the group out, centered at col_center
+            if n == 1:
+                base_map[group[0].label] = col_center
+            else:
+                # Evenly spread out across the group, centered at col_center
+                offsets = [(i - (n - 1) / 2) * bar_width for i in range(n)]
+                for lvl, off in zip(sorted(group, key=lambda l: l.label), offsets):
+                    base_map[lvl.label] = col_center + off
 
     return base_map
-
 
 def compute_sublevel_x_map(
   levels: List[Level],
@@ -144,45 +165,115 @@ def compute_y_map(
     levels: List[Level],
     cfg: LayoutConfig
 ) -> Dict[str, float]:
-    """
-    Compute vertical positions for each level.
-
-    - Base levels that share a parent (by label) are jittered within ±y_jitter.
-    - Sublevels ride on their parent's bar, shifted by ΔE = (E_sub − E_parent).
-
-    Returns a dict mapping level.label → y‐coordinate.
-    """
     from collections import defaultdict
-
-    # Group by parent_label (string), not by Level object
-    groups: Dict[str, List[Level]] = defaultdict(list)
-    for lvl in levels:
-        parent_label = lvl.parent.label if lvl.parent else lvl.label
-        groups[parent_label].append(lvl)
+    import numpy as np
 
     y_map: Dict[str, float] = {}
-    for parent_label, siblings in groups.items():
-        # find the parent energy for ΔE calculations
+
+    # 1) Base-level vertical fan (per column → energy_group_key)
+    total_base_jitter = cfg.y_jitter * cfg.energy_group_y_scale
+    cols: Dict[int, List[Level]] = defaultdict(list)
+    for lvl in levels:
+        if lvl.sublevel == 0:
+            cols[infer_column(lvl, cfg)].append(lvl)
+
+    for bases in cols.values():
+        # bucket by energy_group_key
+        by_group: Dict[Hashable, List[Level]] = defaultdict(list)
+        for lvl in bases:
+            by_group[cfg.energy_group_key(lvl)].append(lvl)
+
+        # fan each bucket over ±total_base_jitter
+        for key in sorted(by_group):
+            group = by_group[key]
+            ordered = sorted(group, key=lambda L: L.energy)
+            n = len(ordered)
+            offsets = (
+                np.linspace(-total_base_jitter, total_base_jitter, n)
+                if n > 1 else [0.0]
+            )
+            for lvl, off in zip(ordered, offsets):
+                y_map[lvl.label] = lvl.energy + off
+
+    # 2) Sublevel vertical fan around parent (ΔE + extra jitter)
+    total_sub_jitter = cfg.y_jitter * getattr(cfg, "sublevel_y_scale", 1.0)
+    subs_by_parent: Dict[str, List[Level]] = defaultdict(list)
+    for lvl in levels:
+        if lvl.sublevel > 0 and lvl.parent:
+            subs_by_parent[lvl.parent.label].append(lvl)
+
+    for parent_lbl, subs in subs_by_parent.items():
+        parent_y = y_map.get(parent_lbl)
+        if parent_y is None:
+            continue
+
+        # sort by m so negatives at bottom
+        sorted_subs = sorted(
+            subs,
+            key=lambda L: float(L.label.split("m=")[1])
+        )
+        n = len(sorted_subs)
+        extra_offsets = (
+            np.linspace(-total_sub_jitter, total_sub_jitter, n)
+            if n > 1 else [0.0]
+        )
+
+        # true Zeeman ΔE
         parent_energy = next(
-            (l.energy for l in siblings if l.label == parent_label),
+            (l.energy for l in levels if l.label == parent_lbl),
             None
         )
 
-        # 1) stack base‐levels (sublevel==0)
-        bases = [s for s in siblings if s.sublevel == 0]
-        if bases:
-            ordered = sorted(bases, key=lambda b: b.energy)
-            n = len(ordered)
-            offs = (np.linspace(-cfg.y_jitter, cfg.y_jitter, n)
-                    if n > 1 else [0])
-            for lvl, off in zip(ordered, offs):
-                y_map[lvl.label] = lvl.energy + off
-
-        # 2) place sub‐levels relative to the parent’s y
-        for s in siblings:
-            if s.sublevel > 0 and parent_energy is not None:
-                delta = s.energy - parent_energy
-                y_map[s.label] = y_map[parent_label] + delta
+        for lvl, extra in zip(sorted_subs, extra_offsets):
+            delta = lvl.energy - (parent_energy or lvl.energy)
+            y_map[lvl.label] = parent_y + delta + extra
 
     return y_map
+
+
+def compute_sublevel_y_map(
+    levels: List[Level],
+    base_y_map: Dict[str, float],
+    cfg: LayoutConfig
+) -> Dict[str, float]:
+    from collections import defaultdict
+
+    # bucket sub-levels by parent label
+    subs_by_parent: Dict[str, List[Level]] = defaultdict(list)
+    for lvl in levels:
+        if lvl.sublevel > 0 and lvl.parent:
+            subs_by_parent[lvl.parent.label].append(lvl)
+
+    sub_y: Dict[str, float] = {}
+    # total jitter to apply
+    total_jitter = cfg.y_jitter * cfg.sublevel_y_scale
+
+    for parent_lbl, subs in subs_by_parent.items():
+        parent_y = base_y_map.get(parent_lbl)
+        if parent_y is None:
+            continue
+
+        # sort by m quantum number (so negative m on bottom)
+        subs_sorted = sorted(
+            subs,
+            key=lambda L: float(L.label.split("m=")[1])
+        )
+        n = len(subs_sorted)
+        # symmetric offsets
+        offs = (np.linspace(-total_jitter, total_jitter, n)
+                if n > 1 else [0.0])
+
+        # also preserve the actual ΔE shift
+        parent_energy = next(
+            (l.energy for l in levels if l.label == parent_lbl),
+            None
+        )
+
+        for lvl, extra in zip(subs_sorted, offs):
+            # true energy shift
+            delta = lvl.energy - (parent_energy or lvl.energy)
+            sub_y[lvl.label] = parent_y + delta + extra
+
+    return sub_y
+
 
