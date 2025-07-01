@@ -37,20 +37,6 @@
       "style":"solid"
     },
     {
-      "from": "5p  2P1/2",
-      "to":   "4d  2D3/2",
-      "label":"1092 nm",
-      "color":"orange",
-      "style":"dotted"
-    },
-    {
-      "from": "5p  2P3/2",
-      "to":   "4d  2D5/2",
-      "label":"1033 nm",
-      "color":"orange",
-      "style":"dotted"
-    },
-    {
       "from": "5s  2S1/2",
       "to":   "4d  2D5/2",
       "label":"674 nm",
@@ -58,4 +44,4 @@
       "style":"solid"
     }
   ]
-}
+}  
