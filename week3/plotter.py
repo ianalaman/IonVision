@@ -8,8 +8,7 @@ from typing import List, Dict
 from .models import Level
 from .layout import compute_x_map, compute_y_map, LayoutConfig
 from .style  import StyleConfig
-from .format  import format_term_symbol, format_ion_label
-
+from .format import format_term_symbol, format_ion_label
 
 def draw_levels(
     ax: plt.Axes,
@@ -19,53 +18,100 @@ def draw_levels(
     cfg: LayoutConfig,
     style: StyleConfig
 ) -> None:
-    """
-    Draw energy‐level bars and sublevel ticks on `ax`.
+    pad = 0.02
+    bar_half = cfg.bar_half
 
-    - Base bars (sublevel==0) use cfg.bar_half and style.base_bar_color.
-    - Sublevel ticks (sublevel>0) use style.sublevel_tick_color.
-    - Labels only for sublevel==0.
-    """
-    pad      = 0.02
-    tick_half = cfg.bar_half * style.tick_size
+    # 1) Identify all parent labels
+    parent_labels = {
+        lvl.parent.label
+        for lvl in levels
+        if lvl.sublevel > 0 and lvl.parent
+    }
 
+    # 2) Draw base bars and sublevel ticks
     for lvl in levels:
         x = x_map[lvl.label]
         y = y_map[lvl.label]
-        lw = style.line_width
 
-        # choose color by split_type
-        color = (style.zeeman_bar_color
-                 if lvl.split_type == "zeeman"
-                 else style.base_bar_color)
-
-        # draw bar or tick
         if lvl.sublevel == 0:
-            print("Drawing base-bar for", lvl.label, "at", x, y)
-            ax.hlines(y, x - cfg.bar_half, x + cfg.bar_half,
-                      color=color, lw=lw)
-            ax.text(x + cfg.bar_half + pad, y,
-                    format_term_symbol(lvl),
-                    va='center', ha='left', fontsize=9)
+            # base bars (parent vs regular)
+            if lvl.label in parent_labels:
+                color, ls, lw = (
+                    style.parent_bar_color,
+                    style.parent_bar_linestyle,
+                    style.parent_bar_line_width
+                )
+            else:
+                color, ls, lw = (
+                    style.base_bar_color,
+                    style.base_bar_linestyle,
+                    style.line_width
+                )
+            ax.hlines(y, x - bar_half, x + bar_half,
+                      color=color, lw=lw, linestyle=ls)
+            # term symbol
+            ax.text(
+                x + bar_half + style.level_label_x_offset,
+                y + style.level_label_y_offset,
+                format_term_symbol(lvl),
+                va='center', ha='left',
+                fontsize=style.level_label_fontsize
+            )
         else:
+            # sublevel ticks only
+            if lvl.parent and lvl.parent.label in parent_labels:
+                tick_color, ls, lw, length = (
+                    style.parent_sublevel_tick_color,
+                    style.parent_sublevel_tick_linestyle,
+                    style.parent_sublevel_tick_line_width,
+                    style.parent_sublevel_tick_length
+                )
+            else:
+                tick_color, ls, lw, length = (
+                    style.sublevel_tick_color,
+                    style.sublevel_tick_linestyle,
+                    style.sublevel_tick_line_width,
+                    style.sublevel_tick_length
+                )
+            tick_half = bar_half * length
             ax.hlines(y, x - tick_half, x + tick_half,
-                      color=style.sublevel_tick_color, lw=lw)
-            m_txt = lvl.label.split("m=")[1]   # e.g. "+1.5"
-            ax.text(x + tick_half + pad,
-                y,
-                m_txt,
-                va='center', ha='left', fontsize=6)
+                      color=tick_color, lw=lw, linestyle=ls)
+
+    # 3) Stack sublevel labels at right of each parent bar
+    #    Group sublevels by parent
+    from collections import defaultdict
+    subs_by_parent = defaultdict(list)
+    for lvl in levels:
+        if lvl.sublevel > 0 and lvl.parent:
+            subs_by_parent[lvl.parent.label].append(lvl)
+
+    for parent_lbl, subs in subs_by_parent.items():
+        # draw each label at its actual y_map position
+        x0 = x_map[parent_lbl]
+        for lvl in subs:
+            x_text = x0 + bar_half + style.sublevel_label_x_offset
+            y_text = y_map[lvl.label] + style.sublevel_label_y_offset
+            ax.text(
+                x_text,
+                y_text,
+                lvl.label.split("m=")[1],
+                fontfamily='monospace',
+                va='center', ha='left',
+                fontsize=style.sublevel_label_fontsize
+            )
 
 
 def draw_transitions(
     ax: plt.Axes,
     transitions: List[dict],
     x_map: Dict[str, float],
-    y_map: Dict[str, float]
+    y_map: Dict[str, float],
+    style: StyleConfig
 ) -> None:
     """
     Draw arrows/lines for each transition dict with keys:
       'from', 'to', optional 'label','color','style','reversible'
+    Uses the passed `style` for arrow‐ and label‐ styling.
     """
     for t in transitions:
         x1, y1 = x_map[t['from']], y_map[t['from']]
@@ -74,24 +120,37 @@ def draw_transitions(
         color = t.get('color','k')
 
         if t.get('reversible', False):
-            ax.plot([x1,x2], [y1,y2], linestyle=ls, color=color, lw=2)
+            ax.plot(
+                [x1, x2], [y1, y2],
+                linestyle=ls,
+                color=color,
+                lw=style.transition_line_width
+            )
         else:
-            arrow = FancyArrowPatch((x1,y1), (x2,y2),
-                                     arrowstyle='->',
-                                     mutation_scale=10,
-                                     color=color, lw=2, linestyle=ls)
+            arrow = FancyArrowPatch(
+                (x1, y1), (x2, y2),
+                arrowstyle=style.transition_arrowstyle,
+                mutation_scale=style.transition_mutation_scale,
+                color=color,
+                lw=style.transition_arrow_line_width,
+                linestyle=ls
+            )
             ax.add_patch(arrow)
 
-        # place label offset from the line
-        mx, my = (x1 + x2)/2, (y1 + y2)/2
+        # place transition label
+        mx, my = (x1 + x2) / 2, (y1 + y2) / 2
         dx, dy = x2 - x1, y2 - y1
         L = math.hypot(dx, dy)
         ux, uy = dx/L, dy/L
         px, py = -uy, ux
-        shift = 0.035
-        ax.text(mx + px*shift, my + py*shift,
-                t.get('label',''),
-                va='center', ha='center', fontsize=8)
+
+        ax.text(
+            mx + px * style.transition_label_shift,
+            my + py * style.transition_label_shift,
+            t.get('label',''),
+            va='center', ha='center',
+            fontsize=style.transition_label_fontsize
+        )
 
 
 def plot_energy_levels(
@@ -107,28 +166,23 @@ def plot_energy_levels(
     """
     High-level entry-point: compute layout, draw levels and transitions,
     and apply axis styling.
-
-    `data` must contain:
-      - 'ion' (str)
-      - 'unit' (str)
-      - 'levels' (List[Level])
-      - 'transitions' (List[dict])
     """
     levels      = data['levels']
     transitions = data.get('transitions', [])
 
-    
+    # compute x/y maps
     y_map = compute_y_map(levels, layout_cfg)
     x_map = compute_x_map(levels, layout_cfg, style_cfg)
 
     fig, ax = plt.subplots(figsize=figsize)
+
+    # pass style_cfg into both drawing functions
     draw_levels(ax, levels, x_map, y_map, layout_cfg, style_cfg)
-    draw_transitions(ax, transitions, x_map, y_map)
+    draw_transitions(ax, transitions, x_map, y_map, style_cfg)
 
     ion_label = format_ion_label(data.get('ion',''))
     ax.set_title(f"{ion_label} Energy Levels", pad=title_pad)
-    ax.set_ylabel(f"Energy ({data.get('unit','cm$^{-1}$')})",
-                  labelpad=ylabel_pad)
+    ax.set_ylabel(f"Energy ({data.get('unit','cm$^{-1}$')})", labelpad=ylabel_pad)
     ax.set_xticks([])
 
     if show_axis:
@@ -139,14 +193,10 @@ def plot_energy_levels(
     else:
         ax.axis('off')
 
-    # set limits
     spacing = layout_cfg.spacing
-    yvals = list(y_map.values())
-    xvals = list(x_map.values())
-    ax.set_ylim(min(yvals)-spacing, max(yvals)+spacing)
+    yvals, xvals = list(y_map.values()), list(x_map.values())
+    ax.set_ylim(min(yvals)-100*spacing, max(yvals)+spacing)
     ax.set_xlim(min(xvals)-spacing/2, max(xvals)+spacing/2)
     fig.subplots_adjust(left=left_margin, bottom=0.15)
     fig.tight_layout()
-    ax.set_ylim(min(yvals)-1000*spacing, max(yvals))
-
     plt.show()

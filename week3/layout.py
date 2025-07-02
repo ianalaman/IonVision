@@ -96,15 +96,15 @@ def compute_base_x_map(
             if n == 1:
                 base_map[group[0].label] = col_center
             else:
-                # Evenly spread out across the group, centered at col_center
-                offsets = [(i - (n - 1) / 2) * bar_width for i in range(n)]
+                # fan to the right only
+                offsets = [i * bar_width for i in range(n)]
                 for lvl, off in zip(sorted(group, key=lambda l: l.label), offsets):
                     base_map[lvl.label] = col_center + off
 
     return base_map
 
 def compute_sublevel_x_map(
-  levels: List[Level],
+    levels: List[Level],
     base_map: Dict[str, float],
     cfg: LayoutConfig,
     style: StyleConfig
@@ -135,11 +135,8 @@ def compute_sublevel_x_map(
         # sort by numeric m
         subs_sorted = sorted(subs, key=lambda L: float(L.label.split("m=")[1]))
 
-        # compute a “safe” jitter so that the outer ticks
-        # sit exactly at the bar’s edges (±bar_half)
-        tick_half   = cfg.bar_half * style.tick_size
-        safe_jitter = cfg.bar_half - tick_half
-        offsets     = np.linspace(-safe_jitter, safe_jitter, n)
+        # use cfg.x_jitter instead of safe jitter
+        offsets = np.linspace(-cfg.x_jitter, cfg.x_jitter, n)
 
         for lvl, off in zip(subs_sorted, offsets):
             sub_map[lvl.label] = base_x + off

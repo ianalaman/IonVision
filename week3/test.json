@@ -15,7 +15,7 @@
     {
       "label": "5p  2P3/2",
       "energy": 24510.0,
-      "zeeman": false
+      "zeeman": true
     },
     {
       "label": "4d  2D3/2",
@@ -30,17 +30,24 @@
   ],
   "transitions": [
     {
-      "from": "5s  2S1/2",
-      "to":   "5p  2P1/2",
+      "from": "5s  2S1/2, m=-0.5",
+      "to":   "5p  2P3/2, m=-1.5",
       "label":"422 nm",
       "color":"purple",
       "style":"solid"
     },
     {
-      "from": "5s  2S1/2",
-      "to":   "4d  2D5/2",
+      "from": "5s  2S1/2, m=-0.5",
+      "to":   "4d  2D5/2, m=-2.5",
       "label":"674 nm",
       "color":"red",
+      "style":"solid"
+    },
+    {
+      "from": "4d  2D5/2, m=-2.5",
+      "to":   "5p  2P3/2, m=-1.5",
+      "label":"1033 nm",
+      "color":"brown",
       "style":"solid"
     }
   ]
