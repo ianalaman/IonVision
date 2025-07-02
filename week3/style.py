@@ -33,7 +33,7 @@ class StyleConfig:
     level_label_fontsize:    float     = 15.0
 
     # ─── Sub‐level “m=” text styling ──────────────────────────────────────────
-    sublevel_label_x_offset: float     = 0.3
+    sublevel_label_x_offset: float     = 0.15
     # base y offset for the first sublevel label (from parent y)
     sublevel_label_y_offset: float     = 5.0
     sublevel_label_y_spacing: float    = 99999990  # NEW: vertical gap between stacked sublevel labels

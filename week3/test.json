@@ -8,19 +8,9 @@
       "zeeman": true
     },
     {
-      "label": "5p  2P1/2",
-      "energy": 23700.0,
-      "zeeman": false
-    },
-    {
       "label": "5p  2P3/2",
       "energy": 24510.0,
       "zeeman": true
-    },
-    {
-      "label": "4d  2D3/2",
-      "energy": 14534.0,
-      "zeeman": false
     },
     {
       "label": "4d  2D5/2",

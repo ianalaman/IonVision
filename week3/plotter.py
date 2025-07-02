@@ -1,12 +1,13 @@
 # plotter.py
 
+
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch
 import math
 from typing import List, Dict
 
 from .models import Level
-from .layout import compute_x_map, compute_y_map, LayoutConfig
+from .layout import compute_x_map, compute_y_map, LayoutConfig, infer_column
 from .style  import StyleConfig
 from .format import format_term_symbol, format_ion_label
 
@@ -28,13 +29,13 @@ def draw_levels(
         if lvl.sublevel > 0 and lvl.parent
     }
 
-    # 2) Draw base bars and sublevel ticks
+    # 2) Draw base bars, sublevel ticks, and term‐symbol text
     for lvl in levels:
         x = x_map[lvl.label]
         y = y_map[lvl.label]
 
         if lvl.sublevel == 0:
-            # base bars (parent vs regular)
+            # draw the main energy bar
             if lvl.label in parent_labels:
                 color, ls, lw = (
                     style.parent_bar_color,
@@ -49,16 +50,26 @@ def draw_levels(
                 )
             ax.hlines(y, x - bar_half, x + bar_half,
                       color=color, lw=lw, linestyle=ls)
-            # term symbol
+
+            # term symbol: left for col 0, right otherwise
+            col = infer_column(lvl, cfg)
+            if col == 0:
+                x_txt = x - bar_half - style.level_label_x_offset
+                ha_txt = 'right'
+            else:
+                x_txt = x + bar_half + style.level_label_x_offset
+                ha_txt = 'left'
+
             ax.text(
-                x + bar_half + style.level_label_x_offset,
+                x_txt,
                 y + style.level_label_y_offset,
                 format_term_symbol(lvl),
-                va='center', ha='left',
+                va='center', ha=ha_txt,
                 fontsize=style.level_label_fontsize
             )
+
         else:
-            # sublevel ticks only
+            # just draw the little sublevel tick
             if lvl.parent and lvl.parent.label in parent_labels:
                 tick_color, ls, lw, length = (
                     style.parent_sublevel_tick_color,
@@ -77,29 +88,34 @@ def draw_levels(
             ax.hlines(y, x - tick_half, x + tick_half,
                       color=tick_color, lw=lw, linestyle=ls)
 
-    # 3) Stack sublevel labels at right of each parent bar
-    #    Group sublevels by parent
+    # 3) Stack sublevel “m=” labels at each parent
     from collections import defaultdict
-    subs_by_parent = defaultdict(list)
+    subs_by_parent: Dict[str, List[Level]] = defaultdict(list)
     for lvl in levels:
         if lvl.sublevel > 0 and lvl.parent:
             subs_by_parent[lvl.parent.label].append(lvl)
 
     for parent_lbl, subs in subs_by_parent.items():
-        # draw each label at its actual y_map position
         x0 = x_map[parent_lbl]
         for lvl in subs:
-            x_text = x0 + bar_half + style.sublevel_label_x_offset
-            y_text = y_map[lvl.label] + style.sublevel_label_y_offset
+            # flip to left for column 0 parents
+            col = infer_column(lvl.parent, cfg)
+            if col == 0:
+                x_txt = x0 - bar_half - style.sublevel_label_x_offset
+                ha_txt = 'right'
+            else:
+                x_txt = x0 + bar_half + style.sublevel_label_x_offset
+                ha_txt = 'left'
+
+            y_txt = y_map[lvl.label] + style.sublevel_label_y_offset
             ax.text(
-                x_text,
-                y_text,
+                x_txt,
+                y_txt,
                 lvl.label.split("m=")[1],
                 fontfamily='monospace',
-                va='center', ha='left',
+                va='center', ha=ha_txt,
                 fontsize=style.sublevel_label_fontsize
             )
-
 
 def draw_transitions(
     ax: plt.Axes,
