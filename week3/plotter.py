@@ -165,7 +165,8 @@ def draw_transitions(
             my + py * style.transition_label_shift,
             t.get('label',''),
             va='center', ha='center',
-            fontsize=style.transition_label_fontsize
+            fontsize=style.transition_label_fontsize,
+            color=color
         )
 
 
@@ -197,7 +198,8 @@ def plot_energy_levels(
     draw_transitions(ax, transitions, x_map, y_map, style_cfg)
 
     ion_label = format_ion_label(data.get('ion',''))
-    ax.set_title(f"{ion_label} Energy Levels", pad=title_pad)
+    title_text = data.get('title', '')
+    ax.set_title(f"{ion_label} {title_text}", pad=title_pad, fontsize=18)
     ax.set_ylabel(f"Energy ({data.get('unit','cm$^{-1}$')})", labelpad=ylabel_pad)
     ax.set_xticks([])
 
