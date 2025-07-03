@@ -32,9 +32,12 @@ class LayoutConfig:
     y_jitter:         float = 20000.0
     energy_group_key: Callable[[Level], int] = lambda lvl: int(lvl.energy // 10)
     energy_group_y_scale: float = 3000000
-    sublevel_y_scale:     float = 1.0 
-    sub_vis_min: float = 5   # minimum “visual” offset for a sub‐level
-    sub_vis_max: float = 1000   # maximum “visual” offset for a sub‐level
+    # sublevel_y_scale:     float = 1.0 
+    # sub_vis_min: float = 5   # minimum “visual” offset for a sub‐level
+    # sub_vis_max: float = 1000   # maximum “visual” offset for a sub‐level
+    sublevel_uniform_spacing: float = 1000.0   # distance between adjacent sublevels
+    sublevel_uniform_centered: bool = True   # whether to center around parent
+
 
 def infer_column(level: Level, cfg: LayoutConfig) -> int:
     """
@@ -194,7 +197,7 @@ def compute_y_map(
             for lvl, off in zip(ordered, offsets):
                 y_map[lvl.label] = lvl.energy + off
 
-    # 2) Sublevel splitting remapped into a fixed “visual” window
+    # 2) Sublevel splitting with uniform vertical spacing
     subs_by_parent: Dict[str, List[Level]] = defaultdict(list)
     for lvl in levels:
         if lvl.sublevel > 0 and lvl.parent:
@@ -205,30 +208,20 @@ def compute_y_map(
         if parent_y is None:
             continue
 
-        # sort by m so negatives at bottom
         sorted_subs = sorted(
             subs,
             key=lambda L: float(L.label.split("m=")[1])
         )
+        n = len(sorted_subs)
+        step = cfg.sublevel_uniform_spacing
 
-        # pull true ΔE for each sub‐level
-        parent_energy = next(
-            (l.energy for l in levels if l.label == parent_lbl),
-            0.0
-        )
-        deltas = [lvl.energy - parent_energy for lvl in sorted_subs]
-        max_d = max(abs(d) for d in deltas) or 1.0
+        if cfg.sublevel_uniform_centered:
+            start = -step * (n - 1) / 2
+        else:
+            start = 0.0
 
-        # visual‐min/max from config
-        VIS_MIN, VIS_MAX = cfg.sub_vis_min, cfg.sub_vis_max
-
-        # linearly rescale each |ΔE| into [VIS_MIN, VIS_MAX]
-        for lvl, delta in zip(sorted_subs, deltas):
-            frac = abs(delta) / max_d
-            vis = VIS_MIN + frac * (VIS_MAX - VIS_MIN)
-            sign = 1 if delta >= 0 else -1
-            y_map[lvl.label] = parent_y + sign * vis
-
+        for i, lvl in enumerate(sorted_subs):
+            y_map[lvl.label] = parent_y + start + i * step
     return y_map
 
 
