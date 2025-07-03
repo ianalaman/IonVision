@@ -6,6 +6,7 @@ from typing import List
 from scipy.constants import physical_constants, h, c
 
 from .models import Level
+from fractions import Fraction
 
 μB = physical_constants["Bohr magneton"][0]
 hc = h * c
@@ -34,10 +35,15 @@ def zeeman_split(parent: Level, B: float) -> List[Level]:
 
     out: List[Level] = []
     for mJ in np.arange(-J, J+1, 1):
-        ΔE = conv * mJ
+        # Represent mJ as a fraction string with explicit sign
+        mJ_frac = Fraction(mJ).limit_denominator()
+        # str(mJ_frac) → '1/2' or '-1/2'; add leading '+' if positive
+        s = str(mJ_frac)
+        if not s.startswith('-'):
+            s = '+' + s
         child = Level(
-            label      = f"{parent.label}, m={mJ:+.1f}",
-            energy     = parent.energy + ΔE,
+            label      = f"{parent.label}, m={s}",
+            energy     = parent.energy + conv * mJ,
             zeeman     = False,
             sublevel   = parent.sublevel + 1,
             parent     = parent,
