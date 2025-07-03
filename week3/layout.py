@@ -8,7 +8,7 @@ from .models import Level
 from collections import defaultdict
 from typing import Callable
 from .models import Level
-
+from fractions import Fraction
 
 
 @dataclass
@@ -138,7 +138,7 @@ def compute_sublevel_x_map(
             continue
 
         # sort by numeric m
-        subs_sorted = sorted(subs, key=lambda L: float(L.label.split("m=")[1]))
+        subs_sorted = sorted(subs, key=lambda L: float(Fraction(L.label.split("m=")[1])))
 
         # use cfg.x_jitter instead of safe jitter
         offsets = np.linspace(-cfg.x_jitter, cfg.x_jitter, n)
@@ -210,7 +210,7 @@ def compute_y_map(
 
         sorted_subs = sorted(
             subs,
-            key=lambda L: float(L.label.split("m=")[1])
+            key=lambda L: float((Fraction(L.label.split("m=")[1])))
         )
         n = len(sorted_subs)
         step = cfg.sublevel_uniform_spacing
@@ -250,7 +250,7 @@ def compute_sublevel_y_map(
         # sort by m quantum number (so negative m on bottom)
         subs_sorted = sorted(
             subs,
-            key=lambda L: float(L.label.split("m=")[1])
+            key=lambda L: float(Fraction(L.label.split("m=")[1]))
         )
         n = len(subs_sorted)
         # symmetric offsets
