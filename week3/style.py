@@ -12,7 +12,7 @@ class StyleConfig:
 
     # ─── Parent‐level bar overrides ────────────────────────────────────────────
     parent_bar_color:      str             = "#929292"
-    parent_bar_linestyle:  str             = "dashed"
+    parent_bar_linestyle:  str             = "dotted"
     parent_bar_line_width: float           = 1.0
 
     # ─── Sub‐level tick styling ───────────────────────────────────────────────
@@ -37,9 +37,9 @@ class StyleConfig:
     # base y offset for the first sublevel label (from parent y)
     sublevel_label_y_offset: float     = 5.0
     sublevel_label_y_spacing: float    = 900  # NEW: vertical gap between stacked sublevel labels
-    sublevel_label_fontsize: float     = 7.0
+    sublevel_label_fontsize: float     = 9.0
     # base y offset for the first sublevel label (from parent y)
-    sublevel_label_y_offset: float     = 5.0
+    sublevel_label_y_offset: float     = 0
 
     # ─── Transition line & arrow styling ─────────────────────────────────────
     transition_line_width:        float = 2.0    # for reversible lines
