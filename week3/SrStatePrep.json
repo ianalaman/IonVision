@@ -21,25 +21,25 @@
   ],
   "transitions": [
     {
-      "from": "5s  2S1/2, m=-0.5",
-      "to":   "5p  2P3/2, m=-1.5",
+      "from": "5s  2S1/2, m=-1/2",
+      "to":   "5p  2P3/2, m=-3/2",
       "label":"422 nm",
-      "color":"purple",
+      "color":"blue",
       "style":"solid"
     },
     {
-      "from": "5s  2S1/2, m=-0.5",
-      "to":   "4d  2D5/2, m=-2.5",
+      "from": "5s  2S1/2, m=-1/2",
+      "to":   "4d  2D5/2, m=-5/2",
       "label":"674 nm",
       "color":"red",
       "style":"solid"
     },
     {
-      "from": "4d  2D5/2, m=-2.5",
-      "to":   "5p  2P3/2, m=-1.5",
+      "from": "4d  2D5/2, m=-5/2",
+      "to":   "5p  2P3/2, m=-3/2",
       "label":"1033 nm",
       "color":"brown",
       "style":"solid"
     }
   ]
-}  
+}
