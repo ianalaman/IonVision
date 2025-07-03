@@ -48,7 +48,7 @@ class StyleConfig:
     transition_mutation_scale:    float = 10.0
 
     # ─── Transition‐label styling ─────────────────────────────────────────────
-    transition_label_shift:      float  = 0.25  # perp‐distance from line
+    transition_label_shift:      float  = 0.27  # perp‐distance from line
     transition_label_fontsize:   float  = 15.0
 
     # ─── Global fallback ──────────────────────────────────────────────────────
