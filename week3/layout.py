@@ -33,6 +33,8 @@ class LayoutConfig:
     energy_group_key: Callable[[Level], int] = lambda lvl: int(lvl.energy // 10)
     energy_group_y_scale: float = 3000000
     sublevel_y_scale:     float = 1.0 
+    sub_vis_min: float = 5   # minimum “visual” offset for a sub‐level
+    sub_vis_max: float = 1000   # maximum “visual” offset for a sub‐level
 
 def infer_column(level: Level, cfg: LayoutConfig) -> int:
     """
@@ -192,8 +194,7 @@ def compute_y_map(
             for lvl, off in zip(ordered, offsets):
                 y_map[lvl.label] = lvl.energy + off
 
-    # 2) Sublevel vertical fan around parent (ΔE + extra jitter)
-    total_sub_jitter = cfg.y_jitter * getattr(cfg, "sublevel_y_scale", 1.0)
+    # 2) Sublevel splitting remapped into a fixed “visual” window
     subs_by_parent: Dict[str, List[Level]] = defaultdict(list)
     for lvl in levels:
         if lvl.sublevel > 0 and lvl.parent:
@@ -209,21 +210,24 @@ def compute_y_map(
             subs,
             key=lambda L: float(L.label.split("m=")[1])
         )
-        n = len(sorted_subs)
-        extra_offsets = (
-            np.linspace(-total_sub_jitter, total_sub_jitter, n)
-            if n > 1 else [0.0]
-        )
 
-        # true Zeeman ΔE
+        # pull true ΔE for each sub‐level
         parent_energy = next(
             (l.energy for l in levels if l.label == parent_lbl),
-            None
+            0.0
         )
+        deltas = [lvl.energy - parent_energy for lvl in sorted_subs]
+        max_d = max(abs(d) for d in deltas) or 1.0
 
-        for lvl, extra in zip(sorted_subs, extra_offsets):
-            delta = lvl.energy - (parent_energy or lvl.energy)
-            y_map[lvl.label] = parent_y + delta + extra
+        # visual‐min/max from config
+        VIS_MIN, VIS_MAX = cfg.sub_vis_min, cfg.sub_vis_max
+
+        # linearly rescale each |ΔE| into [VIS_MIN, VIS_MAX]
+        for lvl, delta in zip(sorted_subs, deltas):
+            frac = abs(delta) / max_d
+            vis = VIS_MIN + frac * (VIS_MAX - VIS_MIN)
+            sign = 1 if delta >= 0 else -1
+            y_map[lvl.label] = parent_y + sign * vis
 
     return y_map
 
