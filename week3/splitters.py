@@ -2,8 +2,8 @@
 
 from abc import ABC, abstractmethod
 from typing import List
-from .models import Level
-from .physics import zeeman_split   # your existing function, now returns List[Level]
+from models import Level
+from physics import zeeman_split   # your existing function, now returns List[Level]
 
 class Splitter(ABC):
     """Abstract base class for any splitting kernel."""

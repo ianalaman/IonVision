@@ -3,11 +3,11 @@
 from dataclasses import dataclass
 from typing import List, Dict
 import numpy as np
-from week3.style     import StyleConfig
-from .models import Level
+from style     import StyleConfig
+from models import Level
 from collections import defaultdict
 from typing import Callable
-from .models import Level
+from models import Level
 from fractions import Fraction
 
 
@@ -47,8 +47,8 @@ def infer_column(level: Level, cfg: LayoutConfig) -> int:
     finds its index in cfg.column_letters and returns
     cfg.column_positions[idx], or 0 if missing.
     """
-    term   = level.label.split()[1]
-    letter = term[1]
+    term   = level.label.split()[1]   # e.g. "2P3/2"
+    letter = term[1:]                  # → "P3/2"  (or "P1/2")
     try:
         idx = cfg.column_letters.index(letter)
         return cfg.column_positions[idx]
