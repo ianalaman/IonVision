@@ -22,7 +22,7 @@ class StyleConfig:
     sublevel_tick_length:       float     = 0.3     # fraction of bar_half
 
     # ─── Parent‐sublevel tick overrides ───────────────────────────────────────
-    parent_sublevel_tick_color:        str   = "purple"
+    parent_sublevel_tick_color:        str   = "black"
     parent_sublevel_tick_linestyle:    str   = "solid"
     parent_sublevel_tick_line_width:   float = 1.0
     parent_sublevel_tick_length:       float = 0.30
@@ -43,12 +43,12 @@ class StyleConfig:
 
     # ─── Transition line & arrow styling ─────────────────────────────────────
     transition_line_width:        float = 2.0    # for reversible lines
-    transition_arrow_line_width:  float = 3.0
+    transition_arrow_line_width:  float = 1.0
     transition_arrowstyle:        str   = "-"
     transition_mutation_scale:    float = 10.0
 
     # ─── Transition‐label styling ─────────────────────────────────────────────
-    transition_label_shift:      float  = 0.27  # perp‐distance from line
+    transition_label_shift:      float  = 0.35  # perp‐distance from line
     transition_label_fontsize:   float  = 15.0
 
     # ─── Global fallback ──────────────────────────────────────────────────────

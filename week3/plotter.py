@@ -6,10 +6,10 @@ from matplotlib.patches import FancyArrowPatch
 import math
 from typing import List, Dict
 
-from .models import Level
-from .layout import compute_x_map, compute_y_map, LayoutConfig, infer_column
-from .style  import StyleConfig
-from .format import format_term_symbol, format_ion_label
+from models import Level
+from layout import compute_x_map, compute_y_map, LayoutConfig, infer_column
+from style  import StyleConfig
+from format import format_term_symbol, format_ion_label
 
 def draw_levels(
     ax: plt.Axes,
@@ -59,14 +59,33 @@ def draw_levels(
             else:
                 x_txt = x + bar_half + style.level_label_x_offset
                 ha_txt = 'left'
+            
+            # inside the lvl.sublevel == 0 block, just before ax.text(...)
+            is_parent = (lvl.label in parent_labels)
+            if is_parent:
+                fam = 'Cambria'
+                sz  = style.level_label_fontsize
+            else:
+                fam = 'Cambria'
+                sz  = style.level_label_fontsize
 
             ax.text(
                 x_txt,
                 y + style.level_label_y_offset,
                 format_term_symbol(lvl),
                 va='center', ha=ha_txt,
-                fontsize=style.level_label_fontsize
+                fontfamily=fam,
+                fontsize=sz,
             )
+
+            # ax.text(
+            #     x_txt,
+            #     y + style.level_label_y_offset,
+            #     format_term_symbol(lvl),
+            #     va='center', ha=ha_txt,
+            #     fontfamily='Cambria',
+            #     fontsize=style.level_label_fontsize,
+            # )
 
         else:
             # just draw the little sublevel tick
@@ -112,7 +131,7 @@ def draw_levels(
                 x_txt,
                 y_txt,
                 lvl.label.split("m=")[1],
-                fontfamily='monospace',
+                fontfamily='Cambria',
                 va='center', ha=ha_txt,
                 fontsize=style.sublevel_label_fontsize
             )
@@ -166,6 +185,7 @@ def draw_transitions(
             t.get('label',''),
             va='center', ha='center',
             fontsize=style.transition_label_fontsize,
+            fontfamily='Cambria',
             color=color
         )
 
