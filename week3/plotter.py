@@ -206,22 +206,23 @@ def draw_transitions(
             )
             ax.add_patch(arrow)
 
-        # place transition label
-        mx, my = (x1 + x2) / 2, (y1 + y2) / 2
-        dx, dy = x2 - x1, y2 - y1
-        L = math.hypot(dx, dy)
-        ux, uy = dx/L, dy/L
-        px, py = -uy, ux
+        if t.get('show_label', False):
+            # place transition label
+            mx, my = (x1 + x2) / 2, (y1 + y2) / 2
+            dx, dy = x2 - x1, y2 - y1
+            L = math.hypot(dx, dy)
+            ux, uy = dx/L, dy/L
+            px, py = -uy, ux
 
-        ax.text(
-            mx + px * style.transition_label_shift,
-            my + py * style.transition_label_shift,
-            t.get('label',''),
-            va='center', ha='center',
-            fontsize=style.transition_label_fontsize,
-            fontfamily='Cambria',
-            color=color
-        )
+            ax.text(
+                mx + px * style.transition_label_shift,
+                my + py * style.transition_label_shift,
+                t.get('label',''),
+                va='center', ha='center',
+                fontsize=style.transition_label_fontsize,
+                fontfamily='Cambria',
+                color=color
+            )
 
 
 def plot_energy_levels(
