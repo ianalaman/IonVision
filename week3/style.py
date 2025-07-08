@@ -46,7 +46,7 @@ class StyleConfig:
     transition_arrow_line_width:  float = 1.0
     transition_arrowstyle:        str   = "-"
     transition_mutation_scale:    float = 10.0
-    transition_offset:              float = 0.02   # offset for arrows from line
+    transition_offset:              float = 0.05   # offset for arrows from line
 
     # ─── Transition‐label styling ─────────────────────────────────────────────
     transition_label_shift:      float  = 0.35  # perp‐distance from line

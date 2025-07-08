@@ -166,7 +166,7 @@ def draw_transitions(
             slots[i] = (rank - (n-1)/2, n)
 
             
-    for t in transitions:
+    for i, t in enumerate(transitions):
         x1, y1 = x_map[t['from']], y_map[t['from']]
         x2, y2 = x_map[t['to']],   y_map[t['to']]
         # get the unit normal to the transition vector
