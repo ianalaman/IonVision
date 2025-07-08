@@ -46,6 +46,7 @@ class StyleConfig:
     transition_arrow_line_width:  float = 1.0
     transition_arrowstyle:        str   = "-"
     transition_mutation_scale:    float = 10.0
+    transition_offset:              float = 0.02   # offset for arrows from line
 
     # ─── Transition‐label styling ─────────────────────────────────────────────
     transition_label_shift:      float  = 0.35  # perp‐distance from line
@@ -55,3 +56,5 @@ class StyleConfig:
     line_width:            float           = 0.5
     tick_size:             float           = 0.3
     cmap_sublevels:        Mapping[int,str]= None
+    legend_fontsize:      float           = 10.0
+    legend_loc:           str             = "lower right"

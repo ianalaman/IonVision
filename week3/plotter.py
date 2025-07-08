@@ -11,6 +11,9 @@ from layout import compute_x_map, compute_y_map, LayoutConfig, infer_column
 from style  import StyleConfig
 from format import format_term_symbol, format_ion_label
 
+from collections import defaultdict
+
+
 def draw_levels(
     ax: plt.Axes,
     levels: List[Level],
@@ -148,9 +151,38 @@ def draw_transitions(
       'from', 'to', optional 'label','color','style','reversible'
     Uses the passed `style` for arrow‐ and label‐ styling.
     """
+
+    # build index‐lists for each from→to pair
+    pairs = defaultdict(list)
+    for i, t in enumerate(transitions):
+        pairs[(t['from'], t['to'])].append(i)
+
+    # for each index, store its “slot” and the total count
+    slots = {}
+    for key, idxs in pairs.items():
+        n = len(idxs)
+        for rank, i in enumerate(idxs):
+            # rank runs 0..n-1; center them around 0
+            slots[i] = (rank - (n-1)/2, n)
+
+            
     for t in transitions:
         x1, y1 = x_map[t['from']], y_map[t['from']]
         x2, y2 = x_map[t['to']],   y_map[t['to']]
+        # get the unit normal to the transition vector
+        dx, dy = x2-x1, y2-y1
+        L = math.hypot(dx, dy)
+        ux, uy = dx/L, dy/L
+        nx, ny = -uy, ux
+
+        # find our slot offset and spacing (you can tweak delta to taste)
+        slot_index, total = slots[i]
+        delta = style.transition_offset  # e.g. 0.02 in data‐units
+        ox, oy = nx*(slot_index*delta), ny*(slot_index*delta)
+
+        # apply the shift
+        x1, y1 = x1 + ox, y1 + oy
+        x2, y2 = x2 + ox, y2 + oy
         ls = '-' if t.get('style','solid')=='solid' else ':'
         color = t.get('color','k')
 
@@ -159,7 +191,8 @@ def draw_transitions(
                 [x1, x2], [y1, y2],
                 linestyle=ls,
                 color=color,
-                lw=style.transition_line_width
+                lw=style.transition_line_width,
+                label=t.get('label','')
             )
         else:
             arrow = FancyArrowPatch(
@@ -168,6 +201,7 @@ def draw_transitions(
                 mutation_scale=style.transition_mutation_scale,
                 color=color,
                 lw=style.transition_arrow_line_width,
+                label=t.get('label',''),
                 linestyle=ls
             )
             ax.add_patch(arrow)
@@ -216,7 +250,11 @@ def plot_energy_levels(
     # pass style_cfg into both drawing functions
     draw_levels(ax, levels, x_map, y_map, layout_cfg, style_cfg)
     draw_transitions(ax, transitions, x_map, y_map, style_cfg)
-
+    # draw legend of all transition‐labels
+    ax.legend(loc=style_cfg.legend_loc,
+              fontsize=style_cfg.legend_fontsize,
+              frameon=False)
+    
     ion_label = format_ion_label(data.get('ion',''))
     title_text = data.get('title', '')
     ax.set_title(f"{ion_label} {title_text}", pad=title_pad, fontsize=18)
