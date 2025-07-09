@@ -1,5 +1,5 @@
 {
-  "title": "Optical Pumping (prep up)",
+"title": "Optical Pumping (Prep |↑⟩)",
   "ion": "88Sr+",
   "unit": "cm$^{-1}$",
 "levels": [
@@ -34,9 +34,46 @@
         {
             "from": "4d  2D5/2, m=-5/2",
             "to":   "5s  2S1/2, m=-1/2",
-            "label":"422 nm",
-            "color":"blue",
+            "label":"674 nm",
+            "color":"purple",
             "style":"solid"
+        },
+        {
+      "from": "4d  2D3/2, m=-3/2",
+      "to":   "5p  2P1/2, m=-1/2",
+      "label": "1092 nm",
+      "color": "red",
+      "style": "solid"
+        },
+        {
+        "from": "4d  2D3/2, m=-1/2",
+        "to":   "5p  2P1/2, m=-1/2",
+        "color": "red",
+        "style": "solid"
+        },
+        {
+        "from": "4d  2D3/2, m=-1/2",
+        "to":   "5p  2P1/2, m=+1/2",
+        "color": "red",
+        "style": "solid"
+        },
+        {
+        "from": "4d  2D3/2, m=+1/2",
+        "to":   "5p  2P1/2, m=-1/2",
+        "color": "red",
+        "style": "solid"
+        },
+        {
+        "from": "4d  2D3/2, m=+1/2",
+        "to":   "5p  2P1/2, m=+1/2",
+        "color": "red",
+        "style": "solid"
+        },
+        {
+        "from": "5p  2P1/2, m=+1/2",
+        "to":   "4d  2D3/2, m=+3/2",
+        "color": "red",
+        "style": "solid"
         }
     ]
 }
