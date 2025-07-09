@@ -139,6 +139,11 @@ def draw_levels(
                 fontsize=style.sublevel_label_fontsize
             )
 
+import math
+from collections import defaultdict
+from matplotlib.lines import Line2D
+from typing import List, Dict
+
 def draw_transitions(
     ax: plt.Axes,
     transitions: List[dict],
@@ -147,77 +152,85 @@ def draw_transitions(
     style: StyleConfig
 ) -> None:
     """
-    Draw arrows/lines for each transition dict with keys:
-      'from', 'to', optional 'label','color','style','reversible'
-    Uses the passed `style` for arrow‐ and label‐ styling.
+    Draw transitions between nodes:
+      • reversible=True  → plain line
+      • reversible=False → line + single '>' marker at midpoint
     """
 
-    # build index‐lists for each from→to pair
+    # 1) Group identical from→to pairs so we can offset them
     pairs = defaultdict(list)
     for i, t in enumerate(transitions):
         pairs[(t['from'], t['to'])].append(i)
 
-    # for each index, store its “slot” and the total count
+    # 2) Compute centered slot indices
     slots = {}
-    for key, idxs in pairs.items():
+    for idxs in pairs.values():
         n = len(idxs)
         for rank, i in enumerate(idxs):
-            # rank runs 0..n-1; center them around 0
             slots[i] = (rank - (n-1)/2, n)
 
-            
+    # 3) Draw each
     for i, t in enumerate(transitions):
         x1, y1 = x_map[t['from']], y_map[t['from']]
         x2, y2 = x_map[t['to']],   y_map[t['to']]
-        # get the unit normal to the transition vector
+
+        # unit direction and normal
         dx, dy = x2-x1, y2-y1
         L = math.hypot(dx, dy)
+        if L == 0:
+            continue  # avoid division by zero
         ux, uy = dx/L, dy/L
         nx, ny = -uy, ux
 
-        # find our slot offset and spacing (you can tweak delta to taste)
-        slot_index, total = slots[i]
-        delta = style.transition_offset  # e.g. 0.02 in data‐units
+        # offset so lines don’t overlap
+        slot_index, _ = slots[i]
+        delta = style.transition_offset
         ox, oy = nx*(slot_index*delta), ny*(slot_index*delta)
+        x1, y1, x2, y2 = x1+ox, y1+oy, x2+ox, y2+oy
 
-        # apply the shift
-        x1, y1 = x1 + ox, y1 + oy
-        x2, y2 = x2 + ox, y2 + oy
-        ls = '-' if t.get('style','solid')=='solid' else ':'
+        # styling
+        ls    = '-' if t.get('style','solid')=='solid' else ':'
         color = t.get('color','k')
+        label = t.get('label','')
+        reversible = t.get('reversible', True)
 
-        if t.get('reversible', False):
-            ax.plot(
-                [x1, x2], [y1, y2],
-                linestyle=ls,
-                color=color,
-                lw=style.transition_line_width,
-                label=t.get('label','')
-            )
-        else:
-            arrow = FancyArrowPatch(
-                (x1, y1), (x2, y2),
-                arrowstyle=style.transition_arrowstyle,
-                mutation_scale=style.transition_mutation_scale,
-                color=color,
-                lw=style.transition_arrow_line_width,
-                label=t.get('label',''),
-                linestyle=ls
-            )
-            ax.add_patch(arrow)
+        # draw the base line
+        line, = ax.plot(
+            [x1, x2], [y1, y2],
+            linestyle=ls,
+            color=color,
+            lw=style.transition_line_width,
+            solid_capstyle="butt",
+            label=label
+        )
 
+        if not reversible:
+            # add an arrow at the midpoint via annotate()
+            mx, my = (x1 + x2)/2, (y1 + y2)/2
+            # small half-length along the direction vector
+            arrow_len = getattr(style, 'transition_arrow_length', delta*2) / 2
+            tail = (mx - ux*arrow_len, my - uy*arrow_len)
+            tip  = (mx + ux*arrow_len, my + uy*arrow_len)
+
+            ax.annotate(
+                '', 
+                xy=tip, xytext=tail,
+                arrowprops=dict(
+                    arrowstyle=style.transition_arrowstyle,
+                    mutation_scale=style.transition_mutation_scale,
+                    color=color,
+                    linewidth=style.transition_arrow_line_width,
+                )
+            )
+
+        # optional text label
         if t.get('show_label', False):
-            # place transition label
-            mx, my = (x1 + x2) / 2, (y1 + y2) / 2
-            dx, dy = x2 - x1, y2 - y1
-            L = math.hypot(dx, dy)
-            ux, uy = dx/L, dy/L
+            mx, my = (x1 + x2)/2, (y1 + y2)/2
             px, py = -uy, ux
-
             ax.text(
                 mx + px * style.transition_label_shift,
                 my + py * style.transition_label_shift,
-                t.get('label',''),
+                label,
                 va='center', ha='center',
                 fontsize=style.transition_label_fontsize,
                 fontfamily='Cambria',

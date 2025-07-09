@@ -42,9 +42,12 @@ class StyleConfig:
     sublevel_label_y_offset: float     = 0
 
     # ─── Transition line & arrow styling ─────────────────────────────────────
-    transition_line_width:        float = 2.0    # for reversible lines
+    transition_line_width:        float = 1.0    # for reversible lines
+    # make the arrow “shaft” thicker
     transition_arrow_line_width:  float = 1.0
-    transition_arrowstyle:        str   = "-"
+    # pick a fancier arrow head, or keep "-" for a simple triangular head
+    transition_arrowstyle:        str   = "->"
+    # scale the arrow head—bigger numbers → bigger heads
     transition_mutation_scale:    float = 10.0
     transition_offset:              float = 0.05   # offset for arrows from line
 
