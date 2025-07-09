@@ -31,30 +31,30 @@ from models import Level
 # regex to pull out multiplicity, term letter, numerator & denominator
 _TERM_RE = re.compile(r"(\d+)([A-Za-z])(\d+)/(\d+)")
 
-# maps for superscript & subscript digits
-_SUP = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
-_SUB = str.maketrans("0123456789", "₀₁₂₃₄₅₆₇₈₉")
-
 def format_term_symbol(label: Union[str, Level]) -> str:
     """
-    Convert a raw label like '5s 2S1/2' (or a Level instance) into
-    a Unicode string like '5²S₁∕₂' (no mathtext).
+    Convert '5s 2S1/2' (or a Level) into a single math‐text string,
+    e.g. '$5s^{2}S_{\\tfrac{1}{2}}$'.
     """
     text = label.label if isinstance(label, Level) else label
     parts = text.split(maxsplit=1)
     if len(parts) != 2:
-        return text
+        return text  # nothing to format
 
     orb, term = parts
     m = _TERM_RE.match(term)
     if not m:
-        return text
+        return text  # doesn’t match our pattern
 
     multiplicity, L, num, den = m.groups()
-    sup = multiplicity.translate(_SUP)
-    sub_num = num.translate(_SUB)
-    sub_den = den.translate(_SUB)
 
-    # Use U+2044 FRACTION SLASH (⁄) as subscript for a more fraction-like appearance
-    frac_slash_sub = "\u2044".translate(_SUB)
-    return f"{orb}{sup}{L}{sub_num}{frac_slash_sub}{sub_den}"
+    # Build a pure‐mathtext string:
+    #  - \mathrm{5s} makes "5s" upright
+    #  - ^{2}S gives the term symbol multiplicity
+    #  - _{\frac{1}{2}} gives a small built‐in fraction in the subscript (mathtext supports \frac)
+    math = (
+        r"$"
+        rf"\mathrm{{{orb}}}^{{{multiplicity}}} {L}_{{{num}/{den}}}"
+        r"$"
+    )
+    return math
