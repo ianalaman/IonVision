@@ -32,24 +32,22 @@
 
     "transitions": [
         {
-            "from": "5s  2S1/2, m=-1/2",
-            "to":   "5p  2P1/2, m=-1/2",
-            "label":"422 nm",
-            "color":"blue",
-            "style":"solid"
-        },
-        {
-            "from": "5s  2S1/2, m=-1/2",
-            "to":   "5p  2P1/2, m=-1/2",
-            "label":"422 nm",
-            "color":"blue",
-            "style":"dashed"
+            "from": "5p  2P1/2, m=-1/2",
+            "to":   "5s  2S1/2, m=-1/2",
+            "color": "blue",
+            "style": "solid"
         },
         {
             "from": "5p  2P1/2, m=-1/2",
             "to":   "5s  2S1/2, m=+1/2",
-            "color":"blue",
-            "style":"solid"
+            "color": "blue",
+            "style": "solid"
+        },
+        {
+            "from": "5p  2P1/2, m=+1/2",
+            "to":   "5s  2S1/2, m=-1/2",
+            "color": "blue",
+            "style": "solid"
         },
         {
                 "from": "4d  2D3/2, m=-3/2",
