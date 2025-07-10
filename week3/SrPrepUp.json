@@ -32,11 +32,12 @@
 
     "transitions": [
         {
-            "from": "4d  2D5/2, m=-5/2",
-            "to":   "5s  2S1/2, m=-1/2",
+            "from": "5s  2S1/2, m=-1/2",
+            "to":   "4d  2D5/2, m=-5/2",
             "label":"674 nm",
             "color":"purple",
-            "style":"solid"
+            "style":"solid",
+            "reversible": false
         },
         {
       "from": "4d  2D3/2, m=-3/2",

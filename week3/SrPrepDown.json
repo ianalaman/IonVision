@@ -31,10 +31,10 @@
   ],
   "transitions": [
     {
-      "from": "5p  2P1/2, m=-1/2",
-      "to":   "5s  2S1/2, m=+1/2",
-      "label":"Spontaneous Decay",
-      "color":"gray",
+      "from": "5p  2P1/2, m=+1/2",
+      "to":   "5s  2S1/2, m=-1/2",
+      "label": "Spontaneous Decay",
+      "color": "gray",
       "style":"dashed",
       "reversible": false
     },
@@ -45,8 +45,8 @@
       "style":"dashed",
       "reversible": false
     },
-    {
-      "from": "5p  2P1/2, m=+1/2",
+      {
+      "from": "5p  2P1/2, m=-1/2",
       "to":   "5s  2S1/2, m=+1/2",
       "label": "422 nm σ⁻",
       "color": "blue",
