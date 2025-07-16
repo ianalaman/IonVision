@@ -1,65 +1,69 @@
 # ===== pulseplot/plot.py =====
+"""
+Matplotlib-based static plotting of pulse sequences.
+"""
 import matplotlib.pyplot as plt
+from typing import Optional, List, Tuple, Dict
 from .core import Sequence
 from .config import DEFAULT_CHANNEL_ORDER, DEFAULT_COLORS
+from .utils import draw_pulses, draw_baselines, draw_separators, draw_time_axis
 
 
 def plot_matplotlib(
     seq: Sequence,
-    channel_order=None,
-    colors=None,
-    xlim=None,
-    ax=None
-):
+    channel_order: Optional[List[str]] = None,
+    colors: Optional[Dict[str, str]] = None,
+    xlim: Optional[Tuple[float, float]] = None,
+    ax: Optional[plt.Axes] = None,
+    labels: Optional[List[str]] = None,
+) -> Tuple[plt.Figure, plt.Axes]:
     """
     Draw a static pulse sequence with Matplotlib.
+
+    Parameters
+    ----------
+    seq : Sequence
+        The pulse sequence to plot.
+    channel_order : list of str, optional
+        Order of channels from top to bottom. Defaults to config.
+    colors : dict, optional
+        Mapping channel->color. Defaults to config.
+    xlim : (float, float), optional
+        X-axis limits. Defaults to full data range.
+    ax : matplotlib.axes.Axes, optional
+        Existing axes to draw onto. If None, a new figure/axes is created.
+    labels : list of str, optional
+        Text labels for each region between boundaries.
+
+    Returns
+    -------
+    fig, ax : Matplotlib Figure and Axes objects.
     """
     if channel_order is None:
         channel_order = DEFAULT_CHANNEL_ORDER
     if colors is None:
         colors = DEFAULT_COLORS
-
-    by_ch = seq.by_channel()
-    # assign y positions
-    ypos = {ch: i for i, ch in enumerate(channel_order)}
-
     if ax is None:
         fig, ax = plt.subplots(figsize=(8, 2 + len(channel_order)))
     else:
         fig = ax.figure
 
-    # plot each channel
-    for ch, pulses in by_ch.items():
-        y = ypos.get(ch, len(ypos))
-        intervals = [(p.t0, p.dt) for p in pulses]
-        facecols = [p.color or colors.get(ch, '#888888') for p in pulses]
-        ax.broken_barh(intervals, (y - 0.4, 0.4), facecolors=facecols)
-        for p in pulses:
-            if p.label:
-                ax.text(p.t0 + p.dt/2, y + 0.5, p.label,
-                        ha='center', va='bottom', fontsize=8)
+    # Draw components
+    draw_pulses(ax, seq, channel_order, colors)
+    draw_baselines(ax, seq, channel_order)
+    if labels:
+        draw_separators(ax, seq, labels)
+    draw_time_axis(ax)
 
-    ax.set_yticks(list(ypos.values()), list(ypos.keys()))
-    if xlim is None:
-        # auto from data
+    # Set y-ticks
+    ax.set_yticks(list(range(len(channel_order))), channel_order)
+
+    # Set x-limits
+    if xlim:
+        ax.set_xlim(*xlim)
+    else:
+        # auto-range based on data
         max_t = max((p.t0 + p.dt) for p in seq.pulses)
         ax.set_xlim(0, max_t * 1.05)
-    else:
-        ax.set_xlim(*xlim)
 
-    # Draw a horizontal time axis with an arrow and label 't'
-    ylim = ax.get_ylim()
-    xlim = ax.get_xlim()
-    y_axis = ylim[0] - 0.5
-    ax.annotate(
-        't', 
-        xy=(xlim[1], y_axis), 
-        xytext=(xlim[0], y_axis),
-        arrowprops=dict(arrowstyle='->', lw=1.5, color='black')
-    )
-    ax.get_xaxis().set_visible(True)
     return fig, ax
-
-# Placeholder for interactive backend
-# def plot_interactive(seq: Sequence, ...):
-#     pass
