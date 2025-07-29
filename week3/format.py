@@ -24,10 +24,6 @@ def format_ion_label(ion: str) -> str:
     return f"$^{{{isotope}}}\\mathrm{{{element}}}^{{{charge}}}$"
 
 
-import re
-from typing import Union
-from models import Level
-
 # regex to pull out multiplicity, term letter, numerator & denominator
 _TERM_RE = re.compile(r"(\d+)([A-Za-z])(\d+)/(\d+)")
 
