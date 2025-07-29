@@ -113,7 +113,7 @@ def draw_separators(
         )
         ax.text(
             (start + end) / 2,
-            ylim[1] + 0.1,
+            ylim[1] + 0.4,
             text,
             ha='center',
             va='bottom',
