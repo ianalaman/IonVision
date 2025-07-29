@@ -14,7 +14,16 @@ DEFAULT_COLORS = {
     'AOM': '#4A89DC',
 }
 
+# Plot‐wide rcParams settings
+RC_PARAMS = {
+    'font.size':       16,  # base size for all text
+    'axes.titlesize':  18,  # title
+    'axes.labelsize':  16,  # x/y labels
+    'xtick.labelsize': 16,  # tick labels
+    'ytick.labelsize': 16,
+}
+
 # Style parameters for pulse baselines and separators
-BASELINE_HEIGHT = 0.4
-SEPARATOR_STYLE = dict(linestyle='--', linewidth=0.8, color='grey')
-TIME_AXIS_PROPS = dict(arrowstyle='->', lw=1.5, color='black')
+BASELINE_HEIGHT   = 0.4  # Height of pulse bars
+SEPARATOR_STYLE   = dict(linestyle='--', linewidth=0.8, color='grey')
+TIME_AXIS_PROPS   = dict(arrowstyle='->', lw=1.5, color='black')
