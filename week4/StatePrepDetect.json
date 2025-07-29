@@ -1,5 +1,6 @@
 {
   "name": "StatePrepAndDetect",
+  "title": "State Preparation and Detection ($^{88}$Sr$^+$)", 
   "t_prep": 30,
   "t_pulse": 30,
   "t_det": 30,
