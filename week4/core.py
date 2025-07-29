@@ -81,7 +81,8 @@ class Sequence:
         xlim:          Optional[Tuple[float,float]] = None,
         labels:        Optional[List[str]]     = None,
         ax:            Optional[plt.Axes]      = None,
-        hide_xticks:   bool = True
+        hide_xticks:   bool = True,
+        title:         Optional[str]           = None
     ) -> Tuple[plt.Figure, plt.Axes]:
         """
         Plot this Sequence using plot_matplotlib, filling in any
@@ -103,7 +104,10 @@ class Sequence:
             ax=ax
         )
         ax.invert_yaxis()
+        if title is not None:
+            ax.set_title(title)
         if hide_xticks:
              ax.set_xticks([])
 
         return fig, ax
+
