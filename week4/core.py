@@ -1,74 +1,72 @@
-# ===== pulseplot/core.py =====
-"""
-Core data models for pulse sequences.
-"""
+# ===== week4/core.py =====
+from dataclasses    import dataclass, field
+from typing        import List, Dict, Tuple, Optional
+import matplotlib.pyplot as plt  # for type hints
+
+import json
 from dataclasses import dataclass, field
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Optional
+# assume plot_matplotlib lives in week4/plot.py
+
+
 
 @dataclass
 class Pulse:
-    """
-    Represents a single pulse on a given channel.
-
-    Attributes
-    ----------
-    channel : str
-        Name of the channel (e.g., 'MW', 'AOM').
-    t0 : float
-        Start time of the pulse.
-    dt : float
-        Duration of the pulse.
-    color : str
-        Matplotlib or HTML color code for rendering.
-    label : str, optional
-        Optional label for the pulse (default: '').
-    """
     channel: str
-    t0: float
-    dt: float
-    color: str
-    label: str = ""
+    t0:      float
+    dt:      float
+    color:   str
+    label:   Optional[str] = None
+
+    @staticmethod
+    def from_dict(d: Dict) -> "Pulse":
+        return Pulse(
+            channel = d["channel"],
+            t0      = d["t0"],
+            dt      = d["dt"],
+            color   = d.get("color", "#888"),
+            label   = d.get("label", "")
+        )
+
 
 @dataclass
 class Sequence:
-    """
-    A sequence of pulses across potentially multiple channels.
-
-    Methods
-    -------
-    by_channel()
-        Group pulses by their channel name.
-    channels()
-        List all channel names present in the sequence.
-    time_boundaries()
-        Compute the sorted unique time boundaries (pulse edges).
-    plot(**kwargs)
-        Convenient wrapper around `plot_matplotlib`.
-    """
     pulses: List[Pulse] = field(default_factory=list)
 
+    @staticmethod
+    def from_dict(d: Dict) -> "Sequence":
+        seq = Sequence()
+        for pd in d.get("pulses", []):
+            seq.pulses.append(Pulse.from_dict(pd))
+        return seq
+
+    @staticmethod
+    def from_json_file(path: str) -> "Sequence":
+        with open(path) as f:
+            data = json.load(f)
+        return Sequence.from_dict(data)
+    
     def add(self, pulse: Pulse) -> None:
-        """Add a new Pulse to the sequence."""
         self.pulses.append(pulse)
 
     def by_channel(self) -> Dict[str, List[Pulse]]:
-        """
-        Return a dict mapping channel names to lists of pulses on that channel.
-        """
         d: Dict[str, List[Pulse]] = {}
         for p in self.pulses:
             d.setdefault(p.channel, []).append(p)
         return d
 
-    def channels(self) -> List[str]:
+    def channel_order(self) -> List[str]:
         """
-        Return a sorted list of channel names present in this sequence.
+        Return the channels in the order they first appear in self.pulses.
         """
-        return sorted(self.by_channel().keys())
+        # Since by_channel() preserves insertion order (Python 3.7+),
+        # this is just the dict’s keys.
+        return list(self.by_channel().keys())
 
     def time_boundaries(self) -> List[float]:
         """
-        Compute the unique sorted list of times where any pulse starts or ends.
+        Return the sorted list of all pulse start- and end-times,
+        plus zero as the global start.
         """
         edges = {0.0}
         for p in self.pulses:
@@ -76,17 +74,36 @@ class Sequence:
             edges.add(p.t0 + p.dt)
         return sorted(edges)
 
-    def plot(self, **kwargs) -> Tuple:
+    def plot(
+        self,
+        channel_order: Optional[List[str]]    = None,
+        colors:        Optional[Dict[str,str]] = None,
+        xlim:          Optional[Tuple[float,float]] = None,
+        labels:        Optional[List[str]]     = None,
+        ax:            Optional[plt.Axes]      = None,
+        hide_xticks:   bool = True
+    ) -> Tuple[plt.Figure, plt.Axes]:
         """
-        Wrapper to draw this sequence with Matplotlib.
-
-        Parameters
-        ----------
-        **kwargs
-            Passed directly to `plot_matplotlib`, e.g. channel_order, colors, xlim, ax.
-
-        Returns
-        -------
-        fig, ax : Matplotlib Figure and Axes objects.
+        Plot this Sequence using plot_matplotlib, filling in any
+        missing arguments from the data in self.
         """
-        return plot_matplotlib(self, **kwargs)
+        from .plot import plot_matplotlib  
+        # 1) defaults
+        channel_order = channel_order or self.channel_order()
+        bounds        = self.time_boundaries()
+        xlim          = xlim or (0, bounds[-1])
+
+        # 2) delegate to your plot routine
+        fig, ax = plot_matplotlib(
+            self,
+            channel_order=channel_order,
+            colors=colors,
+            xlim=xlim,
+            labels=labels,
+            ax=ax
+        )
+        ax.invert_yaxis()
+        if hide_xticks:
+             ax.set_xticks([])
+
+        return fig, ax
