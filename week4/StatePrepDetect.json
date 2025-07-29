@@ -1,0 +1,43 @@
+{
+  "name": "StatePrepAndDetect",
+  "t_prep": 30,
+  "t_pulse": 30,
+  "t_det": 30,
+  "pulses": [
+    {
+      "channel": "PMT",
+      "t0":      60,
+      "dt":      30,
+      "color":   "grey"
+    },
+    {
+      "channel": "AOM 422nm",
+      "t0":      60,
+      "dt":      30,
+      "color":   "#2E55D6"
+    },
+    {
+      "channel": "AOM 422nm σ⁻",
+      "t0":      0,
+      "dt":      30,
+      "color":   "#2E55D6"
+    },
+    {
+      "channel": "AOM 674",
+      "t0":      30,
+      "dt":      30,
+      "color":   "#B34ADC"
+    },
+    {
+      "channel": "AOM 1092",
+      "t0":      0,
+      "dt":      90,
+      "color":   "#DC514A"
+    }
+  ],
+  "labels": [
+    "t_prep_down",
+    "t_prep_up",
+    "t_detect"
+  ]
+}
