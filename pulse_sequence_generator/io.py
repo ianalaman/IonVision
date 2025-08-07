@@ -3,7 +3,7 @@
 Input/output utilities: save or load sequences to/from JSON or other formats.
 """
 import json
-from .core import Sequence, Pulse
+from core import Sequence, Pulse
 
 
 def save_sequence_json(seq: Sequence, filename: str) -> None:

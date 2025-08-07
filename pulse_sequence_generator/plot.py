@@ -4,10 +4,10 @@ Matplotlib-based static plotting of pulse sequences.
 """
 import matplotlib.pyplot as plt
 from typing import Optional, List, Tuple, Dict
-from .config import DEFAULT_CHANNEL_ORDER, DEFAULT_COLORS
-from .utils import draw_pulses, draw_baselines, draw_separators, draw_time_axis
+from config import DEFAULT_CHANNEL_ORDER, DEFAULT_COLORS
+from utils import draw_pulses, draw_baselines, draw_separators, draw_time_axis
 import matplotlib as mpl
-from .config import RC_PARAMS
+from config import RC_PARAMS
 
 # apply once, globally
 mpl.rcParams.update(RC_PARAMS)
@@ -43,7 +43,7 @@ def plot_matplotlib(
     -------
     fig, ax : Matplotlib Figure and Axes objects.
     """
-    from .core import Sequence
+    from core import Sequence
     if channel_order is None:
         channel_order = DEFAULT_CHANNEL_ORDER
     if colors is None:

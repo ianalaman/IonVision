@@ -92,7 +92,7 @@ class Sequence:
         Plot this Sequence using plot_matplotlib, filling in any
         missing arguments from the data in self.
         """
-        from .plot import plot_matplotlib  
+        from plot import plot_matplotlib  
         # 1) defaults
         channel_order = channel_order or self.channel_order()
         bounds        = self.time_boundaries()
