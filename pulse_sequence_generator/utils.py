@@ -1,8 +1,8 @@
 '''Helper functions to draw parts of a pulse sequence plot.'''  
 import matplotlib.pyplot as plt
 from typing import List
-from .core import Sequence
-from .config import BASELINE_HEIGHT, SEPARATOR_STYLE, TIME_AXIS_PROPS
+from core import Sequence
+from config import BASELINE_HEIGHT, SEPARATOR_STYLE, TIME_AXIS_PROPS
 
 
 def draw_pulses(
@@ -31,12 +31,13 @@ def draw_pulses(
             if p.label:
                 ax.text(
                     p.t0 + p.dt / 2,
-                    (y - baseline_height),
+                    (y - 0.30 * baseline_height),
                     p.label,
                     ha='center',
                     va='bottom',
-                    fontsize=18,
-                    family='Cambria'
+                    fontsize=12,
+                    family='Cambria',
+                    color='white'
                 )
 
 
@@ -68,7 +69,7 @@ def draw_baselines(
             xs,
             ys,
             color='black',
-            linewidth=2.5,
+            linewidth=1.5,
             solid_capstyle='butt',
             zorder=5
         )

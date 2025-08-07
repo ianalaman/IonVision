@@ -12,13 +12,19 @@
       "channel": "AOM 422nm",
       "t0": 60,
       "dt": 30,
+      "color": "#2E55D6"
+    },
+    {
+      "channel": "AOM 422nm",
+      "t0": 90,
+      "dt": 30,
       "color": "#2E55D6",
-      "label": "t0"
+      "label": "Detuned"
     },
     {
       "channel": "AOM 422nm σ⁻",
       "t0": 0,
-      "dt": 40,
+      "dt": 30,
       "color": "#2E55D6"
     },
     {
@@ -30,19 +36,21 @@
     {
       "channel": "AOM 1092",
       "t0": 0,
-      "dt": 90,
+      "dt": 120,
       "color": "#DC514A"
     }
   ],
   "labels": [
     "$t_{\\mathrm{Prep |↓⟩}}$",
     "$t_{\\mathrm{Prep |↑⟩}}$",
-    "$t_{\\mathrm{Detect}}$"
+    "$t_{\\mathrm{Detect}}$",
+    "$t_{\\mathrm{Doppler}}$"
   ],
   "time_boundaries": [
     0,
     30,
     60,
-    90
+    90,
+    120
   ]
 }
