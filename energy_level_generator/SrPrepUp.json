@@ -1,0 +1,80 @@
+{
+"title": "Optical Pumping (Prep |↑⟩)",
+  "ion": "88Sr+",
+  "unit": "cm$^{-1}$",
+"levels": [
+    {
+        "label": "5s  2S1/2",
+        "energy": 0.0,
+        "zeeman": true
+    },
+    {
+        "label": "4d  2D3/2",
+        "energy": 14647.0,
+        "zeeman": true
+    },
+    {
+        "label": "4d  2D5/2",
+        "energy": 14995.0,
+        "zeeman": true
+    },
+    {
+        "label": "5p  2P1/2",
+        "energy": 23715.0,
+        "zeeman": true
+    },
+    {
+        "label": "5p  2P3/2",
+        "energy": 24429.0,
+        "zeeman": true
+    }
+],
+
+    "transitions": [
+        {
+            "from": "5s  2S1/2, m=-1/2",
+            "to":   "4d  2D5/2, m=-5/2",
+            "label":"674 nm",
+            "color":"purple",
+            "style":"solid",
+            "reversible": false
+        },
+        {
+      "from": "4d  2D3/2, m=-3/2",
+      "to":   "5p  2P1/2, m=-1/2",
+      "label": "1092 nm",
+      "color": "red",
+      "style": "solid"
+        },
+        {
+        "from": "4d  2D3/2, m=-1/2",
+        "to":   "5p  2P1/2, m=-1/2",
+        "color": "red",
+        "style": "solid"
+        },
+        {
+        "from": "4d  2D3/2, m=-1/2",
+        "to":   "5p  2P1/2, m=+1/2",
+        "color": "red",
+        "style": "solid"
+        },
+        {
+        "from": "4d  2D3/2, m=+1/2",
+        "to":   "5p  2P1/2, m=-1/2",
+        "color": "red",
+        "style": "solid"
+        },
+        {
+        "from": "4d  2D3/2, m=+1/2",
+        "to":   "5p  2P1/2, m=+1/2",
+        "color": "red",
+        "style": "solid"
+        },
+        {
+        "from": "5p  2P1/2, m=+1/2",
+        "to":   "4d  2D3/2, m=+3/2",
+        "color": "red",
+        "style": "solid"
+        }
+    ]
+}

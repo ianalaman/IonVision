@@ -1,0 +1,40 @@
+{
+  "name": "CiracZollerGate",
+  "title": "CiracZoller entangling gate via phonon bus",
+  "description": "Blue sideband on ion 1, carrier on ion 2, then red sideband on ion 2; durations inferred from sketch: π/2 and π rotations.",
+  "wavelength": "674 nm",
+  "pulses": [
+    {
+      "channel": "AOM Blue sideband (ion 1)",
+      "aom": "Blue sideband AOM",
+      "t0": 0,
+      "dt": 10,
+      "color": "blue",
+      "phase_rad": 0.0,
+      "theta_rad": 1.5707963267948966
+    },
+    {
+      "channel": "AOM Carrier (ion 2)",
+      "aom": "Carrier AOM",
+      "t0": 10,
+      "dt": 10,
+      "color": "green",
+      "phase_rad": 0.0,
+      "theta_rad": 1.5707963267948966
+    },
+    {
+      "channel": "AOM Red sideband (ion 2)",
+      "aom": "Red sideband AOM",
+      "t0": 20,
+      "dt": 20,
+      "color": "red",
+      "phase_rad": 0.0,
+      "theta_rad": 3.141592653589793
+    }
+  ],
+  "labels": [
+    "Blue sideband (ion 1): π/2",
+    "Carrier (ion 2): π/2",
+    "Red sideband (ion 2): π"
+  ]
+}

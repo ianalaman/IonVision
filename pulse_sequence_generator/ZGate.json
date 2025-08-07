@@ -1,0 +1,36 @@
+{
+  "name":   "ZGateComposite",
+  "title":  "Composite Z Gate (X–Y–X)",
+  "wavelength": "674 nm",
+  "pulses": [
+    {
+      "channel":   "AOM 674 φ=0",
+      "t0":        0,
+      "dt":        30,
+      "color":   "blue",
+      "phase_rad": 0.0,
+      "theta_rad": 3.1416
+    },
+    {
+      "channel":   "AOM 674 φ=π/2",
+      "t0":        30,
+      "dt":        60,
+      "color":   "red",
+      "phase_rad": 1.5708,
+      "theta_rad": 3.1416
+    },
+    {
+      "channel":   "AOM 674 φ=0",
+      "t0":        90,
+      "dt":        30,
+      "color":   "blue",
+      "phase_rad": 0.0,
+      "theta_rad": 3.1416
+    }
+  ],
+  "labels": [
+    "θ=π/2",
+    "θ=π",
+    "θ=-π/2"
+  ]
+}

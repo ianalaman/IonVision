@@ -1,0 +1,48 @@
+{
+  "name": "StatePrepMeasurement",
+  "title": "State Preparation and Measurement (88Sr+)",
+  "pulses": [
+    {
+      "channel": "PMT",
+      "t0": 60,
+      "dt": 30,
+      "color": "grey"
+    },
+    {
+      "channel": "AOM 422nm",
+      "t0": 60,
+      "dt": 30,
+      "color": "#2E55D6",
+      "label": "t0"
+    },
+    {
+      "channel": "AOM 422nm σ⁻",
+      "t0": 0,
+      "dt": 40,
+      "color": "#2E55D6"
+    },
+    {
+      "channel": "AOM 674",
+      "t0": 30,
+      "dt": 30,
+      "color": "#B34ADC"
+    },
+    {
+      "channel": "AOM 1092",
+      "t0": 0,
+      "dt": 90,
+      "color": "#DC514A"
+    }
+  ],
+  "labels": [
+    "$t_{\\mathrm{Prep |↓⟩}}$",
+    "$t_{\\mathrm{Prep |↑⟩}}$",
+    "$t_{\\mathrm{Detect}}$"
+  ],
+  "time_boundaries": [
+    0,
+    30,
+    60,
+    90
+  ]
+}

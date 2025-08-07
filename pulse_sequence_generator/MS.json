@@ -1,0 +1,32 @@
+{
+  "name": "MolmerSorensenGate",
+  "title": "Mølmer–Sørensen Entangling Gate",
+  "description": "Simultaneous blue and red sideband tones on both ions creating an effective XX interaction (maximally entangling for θ=π/2). Detunings are ±δ from the carrier; gate time is t_gate chosen to accumulate the desired entangling phase.",
+  "wavelength": "674 nm",
+  "pulses": [
+    {
+      "channel": "AOM Blue sideband",
+      "aom": "Blue sideband AOM",
+      "t0": 0,
+      "dt": 30,
+      "color": "blue",
+      "phase_rad": 0.0,
+      "frequency_detuning": "+δ",
+      "theta_rad": "π/2 (effective XX)"
+    },
+    {
+      "channel": "AOM Red sideband",
+      "aom": "Red sideband AOM",
+      "t0": 0,
+      "dt": 30,
+      "color": "red",
+      "phase_rad": 0.0,
+      "frequency_detuning": "-δ",
+      "theta_rad": "π/2 (effective XX)"
+    }
+  ],
+  "labels": [
+    "Bichromatic blue & red sidebands (gate time t_gate)"
+  ],
+  "notes": "Choose t_gate and δ such that the phonon excitation returns to ground (closed phase space) and the desired entangling phase is acquired."
+}
