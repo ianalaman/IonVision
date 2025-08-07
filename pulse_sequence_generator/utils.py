@@ -1,8 +1,17 @@
-'''Helper functions to draw parts of a pulse sequence plot.'''  
 import matplotlib.pyplot as plt
 from typing import List
+
 from core import Sequence
-from config import BASELINE_HEIGHT, SEPARATOR_STYLE, TIME_AXIS_PROPS
+from config import (
+    BASELINE_HEIGHT,
+    SEPARATOR_STYLE,
+    TIME_AXIS_PROPS,
+    FONT_SIZE,
+    FONT_FAMILY,
+    FONT_COLOR,
+    HORIZONTAL_SHIFT,
+    VERTICAL_SHIFT,
+)
 
 
 def draw_pulses(
@@ -11,10 +20,16 @@ def draw_pulses(
     channel_order: List[str],
     colors: dict,
     *,
-    baseline_height: float = BASELINE_HEIGHT
+    baseline_height: float = BASELINE_HEIGHT,
+    font_size: float = FONT_SIZE,
+    font_family: str = FONT_FAMILY,
+    font_color: str = FONT_COLOR,
+    horizontal_shift: float = HORIZONTAL_SHIFT,
+    vertical_shift: float = VERTICAL_SHIFT,
 ) -> None:
     """
-    Draw filled bars for each pulse on each channel.
+    Draw filled bars for each pulse on each channel, with labels pulled
+    from config for font size, family, color, and shift.
     """
     by_ch = seq.by_channel()
     ypos = {ch: i for i, ch in enumerate(channel_order)}
@@ -30,15 +45,16 @@ def draw_pulses(
         for p in pulses:
             if p.label:
                 ax.text(
-                    p.t0 + p.dt / 2,
-                    (y - 0.30 * baseline_height),
+                    (p.t0 + p.dt / 2) + horizontal_shift,
+                    (y - 0.5 * baseline_height) + vertical_shift,
                     p.label,
                     ha='center',
-                    va='bottom',
-                    fontsize=12,
-                    family='Cambria',
-                    color='white'
+                    va='center',
+                    fontsize=font_size,
+                    family=font_family,
+                    color=font_color
                 )
+
 
 
 def draw_baselines(
