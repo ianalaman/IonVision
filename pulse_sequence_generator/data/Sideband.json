@@ -1,36 +1,73 @@
 {
-  "name": "SidebandSequence",
-  "title": "Blue–Red–Carrier Sideband Sequence",
-  "wavelength": "674 nm",
+  "name": "SidebandCooling ",
+  "title": "Sideband Cooling (Timescan)(88Sr+)",
   "pulses": [
     {
-      "channel": "Blue sideband",
+      "channel": "PMT",
+      "t0": 120,
+      "dt": 30,
+      "color": "grey"
+    },
+    {
+      "channel": "AOM 422nm",
+      "t0": 120,
+      "dt": 30,
+      "color": "#2E55D6"
+    },
+    {
+      "channel": "AOM 422nm",
+      "t0": 150,
+      "dt": 30,
+      "color": "#2E55D6",
+      "label": "Detuned"
+    },
+    {
+      "channel": "AOM 422nm σ⁻",
       "t0": 0,
-      "dt": 50,
-      "color": "blue",
-      "phase_rad": 0.0,
-      "theta_rad": 3.1416
+      "dt": 30,
+      "color": "#2E55D6"
     },
     {
-      "channel": "Red sideband",
-      "t0": 50,
-      "dt": 50,
-      "color": "red",
-      "phase_rad": 3.1416,
-      "theta_rad": 3.1416
+      "channel": "AOM 422nm σ⁻",
+      "t0": 60,
+      "dt": 30,
+      "color": "#2E55D6"
     },
     {
-      "channel": "Carrier",
-      "t0": 100,
-      "dt": 50,
-      "color": "green",
-      "phase_rad": 0.0,
-      "theta_rad": 3.1416
+      "channel": "AOM 674",
+      "t0": 30,
+      "dt": 30,
+      "color": "#B34ADC"
+    },
+    {
+      "channel": "AOM 674",
+      "t0": 90,
+      "dt": 30,
+      "color": "#B34ADC",
+      "label": "t_pulse"
+    },
+    {
+      "channel": "AOM 1092",
+      "t0": 0,
+      "dt": 180,
+      "color": "#DC514A"
     }
   ],
   "labels": [
-    "Blue sideband",
-    "Red sideband",
-    "Carrier"
+    "$t_{\\mathrm{Prep |↓⟩}}$",
+    "$t_{\\mathrm{Sideband}}$",
+    "$t_{\\mathrm{Prep |↓⟩}}$",
+    "$t_{\\mathrm{Pulse}}$",
+    "$t_{\\mathrm{Detect}}$",
+    "$t_{\\mathrm{Doppler}}$"
+  ],
+  "time_boundaries": [
+    0,
+    30,
+    60,
+    90,
+    120,
+    150,
+    180
   ]
 }
