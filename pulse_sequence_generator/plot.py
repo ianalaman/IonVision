@@ -49,7 +49,7 @@ def plot_matplotlib(
     if colors is None:
         colors = DEFAULT_COLORS
     if ax is None:
-        fig, ax = plt.subplots(figsize=(8, 2 + len(channel_order)))
+        fig, ax = plt.subplots(figsize=( 2*len(channel_order), len(channel_order)))
     else:
         fig = ax.figure
 
