@@ -29,7 +29,7 @@ from dataclasses import dataclass
 from typing import List, Dict
 import numpy as np
 from .style     import StyleConfig
-from models import Level
+from .models import Level
 from collections import defaultdict
 from typing import Callable
 from models import Level
