@@ -1,9 +1,34 @@
-# layout.py
+"""
+layout.py — deterministic x/y layout for atomic/molecular energy level diagrams.
+
+This module assigns **x** (horizontal) and **y** (vertical) coordinates to
+`Level` objects for plotting. The placement is column-based (e.g., S, P, D, F…)
+with optional “energy grouping” along the vertical axis and structured offsets
+for sub-levels (m-resolved states).
+
+Key ideas:
+- **Columns**: Levels are mapped to integer columns using parts of their
+  spectroscopic term symbols (see `infer_column`).
+- **Base levels** (sublevel == 0): horizontally fanned within their column and
+  vertically jittered within “energy groups” to reduce overplotting.
+- **Sublevels** (sublevel > 0): horizontally jittered around their parent and
+  vertically spaced uniformly above/below the parent energy (or grouped y),
+  ordered by the m quantum number extracted from the label.
+
+Notes and assumptions:
+- `Level.label` must contain at least two whitespace-separated tokens; the
+  second token is the term (e.g., "2P3/2"). For sublevels it must also contain
+  "m=<rational>" somewhere (e.g., "... m=+3/2").
+- `cfg.column_letters` should contain the exact **lookup keys** used by
+  `infer_column` (by default, that means strings like "S1/2", "P3/2", etc.,
+  not just "S", "P", "D"). See `infer_column` docstring.
+- All vertical values use the same units as `Level.energy`.
+"""
 
 from dataclasses import dataclass
 from typing import List, Dict
 import numpy as np
-from style     import StyleConfig
+from .style     import StyleConfig
 from models import Level
 from collections import defaultdict
 from typing import Callable
@@ -17,12 +42,52 @@ class LayoutConfig:
     Configuration for horizontal & vertical placement of energy levels.
 
     Attributes:
-      column_letters:   list of spectroscopic letters, e.g. ['S','P','D','F']
-      column_positions: integer column index for each letter (same length)
-      spacing:          horizontal base‐offset for each column (may be < bar width)
-      bar_half:         half-width of each energy-bar along x
-      x_jitter:         max horizontal offset for sub-levels around parent
-      y_jitter:         vertical jitter magnitude for stacking base levels
+      column_letters:
+        Ordered list of *term keys* used to assign columns. With the current
+        `infer_column` implementation (see below), each key should match the
+        **substring after the principal quantum number** in the term token,
+        e.g. ["S1/2", "P1/2", "P3/2", "D3/2", "D5/2", ...].
+
+      column_positions:
+        Integer column id for each entry in `column_letters`. Must be the same
+        length as `column_letters`. These integers are multiplied by `spacing`
+        to obtain the column center x-coordinate.
+
+      spacing:
+        Horizontal distance between neighboring integer columns (in x units).
+
+      bar_half:
+        Half-width of each energy bar; the full bar width is 2*bar_half.
+        Used when “fanning” multiple base levels at the same energy group.
+
+      x_jitter:
+        Maximum horizontal offset (±) for sublevels around the parent center.
+
+      y_jitter:
+        Base vertical jitter scale (same units as `Level.energy`). Combined
+        with `energy_group_y_scale` to spread base levels within an energy group.
+
+      energy_group_key:
+        Function mapping a `Level` → hashable key used to define vertical
+        “energy groups”. Levels within the same (column, group) can be fanned
+        to reduce overlap. Default groups by floor(lvl.energy/10).
+
+      energy_group_y_scale:
+        Additional multiplier for `y_jitter` when fanning base levels
+        within the same energy group.
+
+      # sublevel_y_scale:
+      #   Optional multiplier for `y_jitter` used by `compute_sublevel_y_map`.
+      #   (Not used by `compute_y_map`.) Uncomment/add to `LayoutConfig` if
+      #   you intend to use `compute_sublevel_y_map`.
+
+      sublevel_uniform_spacing:
+        Vertical distance between adjacent sublevels (same units as energy)
+        when using `compute_y_map`’s uniform spacing stage.
+
+      sublevel_uniform_centered:
+        If True, sublevels are centered around the parent; otherwise they start
+        at the parent and extend in +y with uniform steps.
     """
     column_letters:   List[str]
     column_positions: List[int]
@@ -32,46 +97,71 @@ class LayoutConfig:
     y_jitter:         float = 20000.0
     energy_group_key: Callable[[Level], int] = lambda lvl: int(lvl.energy // 10)
     energy_group_y_scale: float = 3000000
-    # sublevel_y_scale:     float = 1.0 
-    # sub_vis_min: float = 5   # minimum “visual” offset for a sub‐level
-    # sub_vis_max: float = 1000   # maximum “visual” offset for a sub‐level
-    sublevel_uniform_spacing: float = 1000.0   # distance between adjacent sublevels
-    sublevel_uniform_centered: bool = True   # whether to center around parent
+    # sublevel_y_scale:     float = 1.0  # Required by `compute_sublevel_y_map` if used.
+    # sub_vis_min: float = 5             # (Legacy idea) Minimum visual offset.
+    # sub_vis_max: float = 1000          # (Legacy idea) Maximum visual offset.
+    sublevel_uniform_spacing: float = 1000.0
+    sublevel_uniform_centered: bool = True
 
 
 def infer_column(level: Level, cfg: LayoutConfig) -> int:
     """
-    Map a Level to its integer column index.
+    Map a `Level` to its integer column index.
 
-    Extracts the second char of the term (e.g. '2P3/2'→'P'),
-    finds its index in cfg.column_letters and returns
-    cfg.column_positions[idx], or 0 if missing.
+    Implementation detail:
+    - Takes the **second token** of `level.label` as the term, e.g., with
+      label "Na 2P3/2 ..." → term == "2P3/2".
+    - Uses the substring **after the first character** of that term:
+      "2P3/2" → "P3/2". This is the lookup key.
+    - Finds that key in `cfg.column_letters` and returns the corresponding
+      `cfg.column_positions[idx]`. If not found, returns 0.
+
+    Therefore, ensure `cfg.column_letters` contains strings like "S1/2",
+    "P3/2", ... rather than just "S", "P", etc.
+
+    Args:
+      level: The `Level` instance to place.
+      cfg:   The layout configuration.
+
+    Returns:
+      Integer column index (from `cfg.column_positions`) or 0 if not found.
     """
     term   = level.label.split()[1]   # e.g. "2P3/2"
-    letter = term[1:]                  # → "P3/2"  (or "P1/2")
+    letter = term[1:]                  # → "P3/2" (or "P1/2")
     try:
         idx = cfg.column_letters.index(letter)
         return cfg.column_positions[idx]
     except ValueError:
         return 0
 
+
 def compute_base_x_map(
     levels: List[Level],
     cfg: LayoutConfig
 ) -> Dict[str, float]:
     """
-    Compute x-positions for *base* levels (sublevel == 0).
+    Compute x-positions for *base* levels (sublevel == 0), returned as
+    {level.label → x}.
 
-    For each spectroscopic column (S, P, D, F...):
-      - Group base levels by unique energy (energy groups) within each column.
-      - For each energy group, spread all levels in the group out symmetrically
-        around the column center (not just the first at center).
-      - Bar centers at: x = col*spacing + (i - (n-1)/2) * 2*bar_half
+    For each spectroscopic column:
+      1) Group base levels by `cfg.energy_group_key(level)`.
+      2) Within each (column, group), **fan** multiple levels horizontally
+         using a bar-width spacing of 2*cfg.bar_half.
+         - If n == 1: place at the column center.
+         - If n > 1: fan **to the right only** from the column center at
+           offsets [0, 1·bar_width, 2·bar_width, ...] ordered by label.
 
-    All levels in an energy group are spread out, centered at the column center.
-    The grouping key function is provided by cfg.energy_group_key.
+    Notes:
+      - Column center is `col_index * cfg.spacing`.
+      - This function only considers levels with `sublevel == 0`.
+
+    Args:
+      levels: Iterable of `Level` objects.
+      cfg:    Layout parameters (columns, spacing, bar size, grouping).
+
+    Returns:
+      Dict mapping `Level.label` → x coordinate for base levels.
     """
-
     # Group base levels by column index
     cols: Dict[int, List[Level]] = {}
     for lvl in levels:
@@ -83,7 +173,7 @@ def compute_base_x_map(
     base_map: Dict[str, float] = {}
     bar_width = 2 * cfg.bar_half
 
-    # Use the grouping key function from config, or default to int(lvl.energy // 10000)
+    # Grouping function (defaults to floor(energy/10000) if missing)
     group_key = getattr(cfg, "energy_group_key", lambda lvl: int(lvl.energy // 10000))
 
     for col, bases in cols.items():
@@ -93,20 +183,23 @@ def compute_base_x_map(
             key = group_key(lvl)
             energy_groups[key].append(lvl)
 
-        # Sort groups by energy
+        # Process groups in energy order for reproducibility
         for energy in sorted(energy_groups):
             group = energy_groups[energy]
             n = len(group)
-            # Spread all levels in the group out, centered at col_center
+
             if n == 1:
+                # Single base level → centered on the column
                 base_map[group[0].label] = col_center
             else:
-                # fan to the right only
+                # Multiple base levels → fan to the right from the center
                 offsets = [i * bar_width for i in range(n)]
+                # Sort by label for deterministic ordering
                 for lvl, off in zip(sorted(group, key=lambda l: l.label), offsets):
                     base_map[lvl.label] = col_center + off
 
     return base_map
+
 
 def compute_sublevel_x_map(
     levels: List[Level],
@@ -115,16 +208,28 @@ def compute_sublevel_x_map(
     style: StyleConfig
 ) -> Dict[str, float]:
     """
-    Compute x-positions for sublevels (sublevel > 0).
+    Compute x-positions for sublevels (sublevel > 0), returned as
+    {level.label → x}.
 
-    For each parent:
+    For each parent level:
       - Collect its sublevels.
-      - Extract the numeric m from each label (e.g. ", m=+1.5").
-      - Sort by that m-value so negatives on left.
-      - Spread within [-x_jitter, +x_jitter] around parent center.
+      - Parse the numeric m from the label using `Fraction` (handles "±3/2").
+      - Sort by m so negatives are on the left.
+      - Place sublevels by linearly spacing within [−x_jitter, +x_jitter]
+        around the parent’s x.
+
+    Args:
+      levels: All levels (base + sublevels).
+      base_map: Mapping of parent (base) labels → x, from `compute_base_x_map`.
+      cfg: Layout parameters; uses `x_jitter` for the span.
+      style: Currently unused here; accepted for API parity.
+
+    Returns:
+      Dict mapping `Level.label` → x coordinate for sublevels only.
     """
     from collections import defaultdict
 
+    # parent_label → [sublevels...]
     subs_by_parent: Dict[str, List[Level]] = defaultdict(list)
     for lvl in levels:
         if lvl.sublevel > 0 and lvl.parent:
@@ -137,10 +242,10 @@ def compute_sublevel_x_map(
         if n == 0:
             continue
 
-        # sort by numeric m
+        # Sort by m (e.g., "m=+3/2") → ensures negative m on the left
         subs_sorted = sorted(subs, key=lambda L: float(Fraction(L.label.split("m=")[1])))
 
-        # use cfg.x_jitter instead of safe jitter
+        # Symmetric offsets across the specified jitter span
         offsets = np.linspace(-cfg.x_jitter, cfg.x_jitter, n)
 
         for lvl, off in zip(subs_sorted, offsets):
@@ -149,14 +254,22 @@ def compute_sublevel_x_map(
     return sub_map
 
 
-
 def compute_x_map(
     levels: List[Level],
     cfg:   LayoutConfig,
     style: StyleConfig
 ) -> Dict[str, float]:
     """
-    Merge base and sublevel x-maps into one dict: label → x coordinate.
+    Compute complete x-positions for all levels by merging base and sublevel
+    maps. Sublevel positions override base positions when keys collide.
+
+    Args:
+      levels: All levels to position.
+      cfg:    Layout configuration.
+      style:  Style configuration (passed through to sublevel mapper).
+
+    Returns:
+      Dict mapping `Level.label` → x coordinate for all levels.
     """
     base_map = compute_base_x_map(levels, cfg)
     sub_map = compute_sublevel_x_map(levels, base_map, cfg, style)
@@ -167,37 +280,68 @@ def compute_y_map(
     levels: List[Level],
     cfg: LayoutConfig
 ) -> Dict[str, float]:
+    """
+    Compute **y** positions for all levels (base + sublevels) using a
+    two-stage strategy:
+
+    Stage 1 — Base levels (sublevel == 0):
+      - Within each column, bucket base levels by `cfg.energy_group_key`.
+      - For each (column, group), sort by actual `Level.energy` and fan them
+        vertically using symmetric offsets within:
+          ± (cfg.y_jitter * cfg.energy_group_y_scale).
+      - This reduces overplotting of multiple base levels with similar energies.
+
+    Stage 2 — Sublevels (sublevel > 0):
+      - For each parent, sort sublevels by m (parsed from label via `Fraction`).
+      - Place them at uniform vertical spacing `cfg.sublevel_uniform_spacing`.
+      - If `cfg.sublevel_uniform_centered` is True, spacing is centered around
+        the parent y; otherwise spacing starts from the parent y and increases.
+
+    Important:
+      - Stage 2 ignores the *true* fine-structure ΔE between sublevels; it
+        imposes a clean, uniform visual spacing. If you need the true ΔE,
+        see `compute_sublevel_y_map`.
+
+    Returns:
+      Dict mapping `Level.label` → y coordinate for all levels.
+    """
     from collections import defaultdict
     import numpy as np
 
     y_map: Dict[str, float] = {}
 
-    # 1) Base-level vertical fan (per column → energy_group_key)
+    # ---------- Stage 1: base-level vertical fanning by energy group ----------
     total_base_jitter = cfg.y_jitter * cfg.energy_group_y_scale
+
+    # Column → [base levels]
     cols: Dict[int, List[Level]] = defaultdict(list)
     for lvl in levels:
         if lvl.sublevel == 0:
             cols[infer_column(lvl, cfg)].append(lvl)
 
     for bases in cols.values():
-        # bucket by energy_group_key
-        by_group: Dict[Hashable, List[Level]] = defaultdict(list)
+        # Group base levels inside the column by energy group key
+        by_group: Dict[Hashable, List[Level]] = defaultdict(list)  # type: ignore[name-defined]
         for lvl in bases:
             by_group[cfg.energy_group_key(lvl)].append(lvl)
 
-        # fan each bucket over ±total_base_jitter
+        # Fan each group symmetrically around its nominal energy
         for key in sorted(by_group):
             group = by_group[key]
             ordered = sorted(group, key=lambda L: L.energy)
             n = len(ordered)
+
+            # Symmetric offsets across the jitter span (or 0 if singleton)
             offsets = (
                 np.linspace(-total_base_jitter, total_base_jitter, n)
                 if n > 1 else [0.0]
             )
+
+            # Apply offsets relative to the *true* energy of each level
             for lvl, off in zip(ordered, offsets):
                 y_map[lvl.label] = lvl.energy + off
 
-    # 2) Sublevel splitting with uniform vertical spacing
+    # ---------- Stage 2: uniform sublevel spacing around parent ----------
     subs_by_parent: Dict[str, List[Level]] = defaultdict(list)
     for lvl in levels:
         if lvl.sublevel > 0 and lvl.parent:
@@ -206,8 +350,10 @@ def compute_y_map(
     for parent_lbl, subs in subs_by_parent.items():
         parent_y = y_map.get(parent_lbl)
         if parent_y is None:
+            # If parent wasn't placed (shouldn't happen with consistent inputs)
             continue
 
+        # Sort sublevels by m so negatives appear lower (or left in x)
         sorted_subs = sorted(
             subs,
             key=lambda L: float((Fraction(L.label.split("m=")[1])))
@@ -215,13 +361,16 @@ def compute_y_map(
         n = len(sorted_subs)
         step = cfg.sublevel_uniform_spacing
 
+        # Choose starting offset: centered around parent or starting at parent
         if cfg.sublevel_uniform_centered:
             start = -step * (n - 1) / 2
         else:
             start = 0.0
 
+        # Assign uniform vertical positions
         for i, lvl in enumerate(sorted_subs):
             y_map[lvl.label] = parent_y + start + i * step
+
     return y_map
 
 
@@ -230,44 +379,66 @@ def compute_sublevel_y_map(
     base_y_map: Dict[str, float],
     cfg: LayoutConfig
 ) -> Dict[str, float]:
+    """
+    Compute sublevel **y** positions while preserving the *true* energy
+    splitting ΔE relative to the parent, plus an optional symmetric jitter.
+
+    This is an alternative to the Stage-2 portion of `compute_y_map` for cases
+    where visualizing the actual fine-structure (or Zeeman) energy differences
+    is preferred over uniform spacing.
+
+    Behavior:
+      - For each parent, sort sublevels by m (parsed via `Fraction`).
+      - Compute `delta = lvl.energy - parent_energy`.
+      - Set `y = base_y_map[parent] + delta + extra`, where `extra` is a
+        symmetric jitter across ±(cfg.y_jitter * cfg.sublevel_y_scale).
+      - Requires `cfg` to define `sublevel_y_scale` (uncomment/add in `LayoutConfig`).
+
+    Args:
+      levels:      All levels.
+      base_y_map:  Mapping from parent base labels → y (e.g., from Stage-1).
+      cfg:         Layout settings; must include `sublevel_y_scale`.
+
+    Returns:
+      Dict mapping sublevel `Level.label` → y.
+    """
     from collections import defaultdict
 
-    # bucket sub-levels by parent label
+    # Group sub-levels by parent label
     subs_by_parent: Dict[str, List[Level]] = defaultdict(list)
     for lvl in levels:
         if lvl.sublevel > 0 and lvl.parent:
             subs_by_parent[lvl.parent.label].append(lvl)
 
     sub_y: Dict[str, float] = {}
-    # total jitter to apply
-    total_jitter = cfg.y_jitter * cfg.sublevel_y_scale
+    # Total symmetric jitter for sublevels (requires cfg.sublevel_y_scale)
+    total_jitter = cfg.y_jitter * cfg.sublevel_y_scale  # type: ignore[attr-defined]
 
     for parent_lbl, subs in subs_by_parent.items():
         parent_y = base_y_map.get(parent_lbl)
         if parent_y is None:
             continue
 
-        # sort by m quantum number (so negative m on bottom)
+        # Sort by m quantum number (negative m first)
         subs_sorted = sorted(
             subs,
             key=lambda L: float(Fraction(L.label.split("m=")[1]))
         )
         n = len(subs_sorted)
-        # symmetric offsets
+
+        # Symmetric jitter offsets (or 0 for single sublevel)
         offs = (np.linspace(-total_jitter, total_jitter, n)
                 if n > 1 else [0.0])
 
-        # also preserve the actual ΔE shift
+        # Retrieve the parent's *true* energy once for ΔE
         parent_energy = next(
             (l.energy for l in levels if l.label == parent_lbl),
             None
         )
 
         for lvl, extra in zip(subs_sorted, offs):
-            # true energy shift
+            # True energy shift relative to parent (ΔE)
             delta = lvl.energy - (parent_energy or lvl.energy)
             sub_y[lvl.label] = parent_y + delta + extra
 
     return sub_y
-
-
