@@ -1,14 +1,16 @@
 # models.py
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 @dataclass
 class Level:
     label:    str
     energy:   float
-    zeeman:   bool = False              # “eligible for Zeeman split?”
-    sublevel: int  = 0                  # generation/depth
-    parent:   Optional[Level] = None    # pointer back
-    split_type: Optional[str] = None    # e.g. "zeeman", "hyperfine"
-    children:  List[Level]   = field(default_factory=list)
+    zeeman:   bool = False
+    sublevel: int  = 0
+    parent:   Optional["Level"] = None
+    split_type: Optional[str] = None
+    children:  List["Level"]   = field(default_factory=list)
+    # NEW: free bag for rendering/extra quantum numbers (color, fixed offsets, mF, etc.)
+    meta: Dict[str, Any] = field(default_factory=dict)
