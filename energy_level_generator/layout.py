@@ -241,7 +241,7 @@ def compute_sublevel_x_map(
             continue
 
         # Sort by m (e.g., "m=+3/2") → ensures negative m on the left
-        subs_sorted = sorted(subs, key=lambda L: float(Fraction(L.label.split("m=")[1])))
+        subs_sorted = sorted(subs, key=lambda L: float(Fraction(L.label.split("m_j=")[1])))
 
         # Symmetric offsets across the specified jitter span
         offsets = np.linspace(-cfg.x_jitter, cfg.x_jitter, n)
@@ -270,6 +270,8 @@ def compute_x_map(
     base_map = compute_base_x_map(levels, cfg)
     sub_map = compute_sublevel_x_map(levels, base_map, cfg)
     return {**base_map, **sub_map}
+
+
 def compute_y_map(
     levels: List[Level],
     cfg: LayoutConfig
@@ -349,7 +351,7 @@ def compute_y_map(
         # Sort sublevels by m so negatives appear lower (or left in x)
         sorted_subs = sorted(
             subs,
-            key=lambda L: float((Fraction(L.label.split("m=")[1])))
+            key=lambda L: float((Fraction(L.label.split("m_j=")[1])))
         )
         n = len(sorted_subs)
         step = cfg.sublevel_uniform_spacing

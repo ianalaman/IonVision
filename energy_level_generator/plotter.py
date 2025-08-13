@@ -133,7 +133,7 @@ def draw_levels(
             ax.text(
                 x_txt,
                 y_txt,
-                lvl.label.split("m=")[1],
+                lvl.label.split("m_j=")[1],
                 fontfamily='Cambria',
                 va='center', ha=ha_txt,
                 fontsize=style.sublevel_label_fontsize
