@@ -5,7 +5,7 @@ import numpy as np
 from typing import List
 from scipy.constants import physical_constants, h, c
 
-from models import Level
+from energy_level_generator.models import Level
 from fractions import Fraction
 
 μB = physical_constants["Bohr magneton"][0]

@@ -2,7 +2,7 @@
 
 import re
 from typing import Union
-from models import Level
+from energy_level_generator.models import Level
 
 # Pre-compile regex patterns for efficiency
 _ISOTOPE_RE = re.compile(r"(\d+)([A-Za-z]+)([+-]\d*|\+|-)?")

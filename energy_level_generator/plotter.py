@@ -6,10 +6,10 @@ from matplotlib.patches import FancyArrowPatch
 import math
 from typing import List, Dict
 
-from models import Level
-from layout import compute_x_map, compute_y_map, LayoutConfig, infer_column
-from style  import StyleConfig
-from format import format_term_symbol, format_ion_label
+from energy_level_generator.models import Level
+from energy_level_generator.layout import compute_x_map, compute_y_map, LayoutConfig, infer_column
+from energy_level_generator.style  import StyleConfig
+from energy_level_generator.format import format_term_symbol, format_ion_label
 
 from collections import defaultdict
 
@@ -141,7 +141,6 @@ def draw_levels(
 
 import math
 from collections import defaultdict
-from matplotlib.lines import Line2D
 from typing import List, Dict
 
 def draw_transitions(
@@ -257,7 +256,7 @@ def plot_energy_levels(
 
     # compute x/y maps
     y_map = compute_y_map(levels, layout_cfg)
-    x_map = compute_x_map(levels, layout_cfg, style_cfg)
+    x_map = compute_x_map(levels, layout_cfg)
 
     fig, ax = plt.subplots(figsize=figsize)
 

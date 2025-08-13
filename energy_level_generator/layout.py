@@ -28,12 +28,12 @@ Notes and assumptions:
 from dataclasses import dataclass
 from typing import List, Dict
 import numpy as np
-from .style     import StyleConfig
-from .models import Level
-from collections import defaultdict
+from energy_level_generator.style import StyleConfig
+from energy_level_generator.models import Level
 from typing import Callable
-from models import Level
 from fractions import Fraction
+from collections.abc import Hashable
+from collections import defaultdict
 
 
 @dataclass
@@ -204,8 +204,7 @@ def compute_base_x_map(
 def compute_sublevel_x_map(
     levels: List[Level],
     base_map: Dict[str, float],
-    cfg: LayoutConfig,
-    style: StyleConfig
+    cfg: LayoutConfig
 ) -> Dict[str, float]:
     """
     Compute x-positions for sublevels (sublevel > 0), returned as
@@ -222,7 +221,6 @@ def compute_sublevel_x_map(
       levels: All levels (base + sublevels).
       base_map: Mapping of parent (base) labels → x, from `compute_base_x_map`.
       cfg: Layout parameters; uses `x_jitter` for the span.
-      style: Currently unused here; accepted for API parity.
 
     Returns:
       Dict mapping `Level.label` → x coordinate for sublevels only.
@@ -256,8 +254,7 @@ def compute_sublevel_x_map(
 
 def compute_x_map(
     levels: List[Level],
-    cfg:   LayoutConfig,
-    style: StyleConfig
+    cfg:   LayoutConfig
 ) -> Dict[str, float]:
     """
     Compute complete x-positions for all levels by merging base and sublevel
@@ -266,16 +263,13 @@ def compute_x_map(
     Args:
       levels: All levels to position.
       cfg:    Layout configuration.
-      style:  Style configuration (passed through to sublevel mapper).
 
     Returns:
       Dict mapping `Level.label` → x coordinate for all levels.
     """
     base_map = compute_base_x_map(levels, cfg)
-    sub_map = compute_sublevel_x_map(levels, base_map, cfg, style)
+    sub_map = compute_sublevel_x_map(levels, base_map, cfg)
     return {**base_map, **sub_map}
-
-
 def compute_y_map(
     levels: List[Level],
     cfg: LayoutConfig
@@ -306,7 +300,6 @@ def compute_y_map(
       Dict mapping `Level.label` → y coordinate for all levels.
     """
     from collections import defaultdict
-    import numpy as np
 
     y_map: Dict[str, float] = {}
 

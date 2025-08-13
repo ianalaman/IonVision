@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from models import Level
+from energy_level_generator.models import Level
 
 def load_ion_data(path: str) -> dict:
   """
