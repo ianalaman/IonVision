@@ -51,3 +51,38 @@ class ZeemanSplitter(Splitter):
         # Attach back to the parent
         lvl.children = children
         return children
+
+
+class SidebandSplitter(Splitter):
+    """Sideband splitting: calls physics.sideband_split and wires up parent/child links."""
+    name = "sideband"
+
+    def __init__(self, gap: float):
+        """
+        Parameters
+        ----------
+        B : float
+            Magnetic field strength in Tesla.
+        """
+        self.gap = gap
+
+    def split(self, lvl: Level) -> List[Level]:
+        # Only split if this level is flagged for sideband and gap>0
+        if not lvl.sideband or self.gap <= 0:
+            return []
+
+        # Delegate to your physics module
+        # Expecting sideband_split to now return List[Level]
+        children = sideband_split(lvl, self.gap)
+
+        # Wire up the tree info on each child
+        for child in children:
+            child.sublevel   = lvl.sublevel + 1
+            child.parent     = lvl
+            child.split_type = self.name
+            # prevent further sideband on these sub‐levels
+            child.sideband   = None
+
+        # Attach back to the parent
+        lvl.children = children
+        return children
