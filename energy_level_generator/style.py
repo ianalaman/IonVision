@@ -61,3 +61,5 @@ class StyleConfig:
     cmap_sublevels:        Mapping[int,str]= None
     legend_fontsize:      float           = 10.0
     legend_loc:           str             = "lower right"
+
+    hide_split_types = {"sideband"}   # hides only sideband labels

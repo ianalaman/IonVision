@@ -15,6 +15,7 @@ from energy_level_generator.format import format_term_symbol, format_ion_label
 
 from collections import defaultdict
 
+
 def _format_sublevel_text(lvl):
     """
     Return a short label for a sublevel:
@@ -154,16 +155,23 @@ def draw_levels(
                     color=tick_color, lw=lw, linestyle=ls)
 
 
-    # 3) Stack sublevel “m=” labels at each parent
+   # 3) Stack sublevel “m=” labels at each parent
     from collections import defaultdict
     subs_by_parent: Dict[str, List[Level]] = defaultdict(list)
     for lvl in levels:
         if lvl.sublevel > 0 and lvl.parent:
             subs_by_parent[lvl.parent.label].append(lvl)
 
+    # which label types to hide (e.g. {"sideband"})
+    hide_types = set(getattr(style, "hide_split_types", ()))
+
     for parent_lbl, subs in subs_by_parent.items():
         x0 = x_map[parent_lbl]
         for lvl in subs:
+            # skip selected types (hide sideband labels, keep Zeeman, etc.)
+            if getattr(lvl, "split_type", None) in hide_types:
+                continue
+
             # flip to left for column 0 parents
             col = infer_column(lvl.parent, cfg)
             if col == 0:
@@ -175,15 +183,16 @@ def draw_levels(
 
             y_txt = y_map[lvl.label] + style.sublevel_label_y_offset
             txt = _format_sublevel_text(lvl)
-            if txt:  # only draw if we have something meaningful
-                ax.text(
-                    x_txt,
-                    y_txt,
-                    txt,
-                    fontfamily='Cambria',
-                    va='center', ha=ha_txt,
-                    fontsize=style.sublevel_label_fontsize
-                )
+            if not txt:
+                continue
+
+            ax.text(
+                x_txt, y_txt, txt,
+                fontfamily='Cambria',
+                va='center', ha=ha_txt,
+                fontsize=style.sublevel_label_fontsize
+            )
+
 
 
 import math

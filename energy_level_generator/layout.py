@@ -36,7 +36,7 @@ from fractions import Fraction
 from collections.abc import Hashable
 from collections import defaultdict
 
-
+style = StyleConfig()
 # ---------- quantum number parsing helpers (m_j, m_f, fallback m) ----------
 _QNUM_RES = {
     "m_j": re.compile(r"\bm_j\s*=\s*([+-]?\d+(?:/\d+)?)"),
