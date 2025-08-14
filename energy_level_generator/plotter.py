@@ -15,33 +15,32 @@ from energy_level_generator.format import format_term_symbol, format_ion_label
 
 from collections import defaultdict
 
-
 def _format_sublevel_text(lvl):
     """
     Return a short label for a sublevel:
-      - Prefer meta['m_f'] or meta['m_j'] if present.
+      - If sideband: show "red sideband"/"blue sideband" (ignore parent m_j/m_f).
+      - Else prefer meta['m_f'] or meta['m_j'] if present.
       - Else parse "m_f=..." or "m_j=..." or "m=..." from the label.
-      - Else, if it's a sideband, show the sideband text.
       - Else return "".
     """
-    meta = getattr(lvl, "meta", {}) or {}
+    # 1) Sideband names first
+    if getattr(lvl, "split_type", None) == "sideband":
+        parts = (lvl.label or "").split(",", 1)
+        return parts[1].strip() if len(parts) > 1 else "sideband"
 
-    # 1) prefer structured meta
+    # 2) Otherwise, show m_f/m_j if available in meta
+    meta = getattr(lvl, "meta", {}) or {}
     for nm in ("m_f", "m_j", "m"):
         if nm in meta and meta[nm] is not None:
             return f"{nm}={meta[nm]}"
 
-    # 2) fallback: parse from label
+    # 3) Fallback: parse from label
     m = re.search(r"\b(m_f|m_j|m)\s*=\s*([+-]?\d+(?:/\d+)?)", getattr(lvl, "label", "") or "")
     if m:
         return f"{m.group(1)}={m.group(2)}"
 
-    # 3) sideband children: show tail of label (e.g. "red sideband")
-    if getattr(lvl, "split_type", None) == "sideband":
-        parts = (lvl.label or "").split(",")
-        return parts[-1].strip() if parts else ""
-
     return ""
+
 
 
 def draw_levels(
