@@ -154,43 +154,89 @@ def draw_levels(
                     color=tick_color, lw=lw, linestyle=ls)
 
 
-   # 3) Stack sublevel “m=” labels at each parent
+   # 3) Stack sublevel “m” labels at each parent
     from collections import defaultdict
     subs_by_parent: Dict[str, List[Level]] = defaultdict(list)
     for lvl in levels:
         if lvl.sublevel > 0 and lvl.parent:
             subs_by_parent[lvl.parent.label].append(lvl)
 
-    # which label types to hide (e.g. {"sideband"})
     hide_types = set(getattr(style, "hide_split_types", ()))
+    show_header = getattr(style, "show_qnum_header", True)
+    pad_factor  = float(getattr(style, "qnum_header_pad_factor", 0.35))
+    value_only  = bool(getattr(style, "zeeman_label_value_only", True))
 
     for parent_lbl, subs in subs_by_parent.items():
         x0 = x_map[parent_lbl]
+
+        # side: left for column 0, otherwise right (match your existing logic)
+        parent = next((L for L in levels if L.label == parent_lbl), None)
+        col = infer_column(parent, cfg) if parent else 1
+        if col == 0:
+            x_txt = x0 - bar_half - style.sublevel_label_x_offset
+            ha_txt = 'right'
+        else:
+            x_txt = x0 + bar_half + style.sublevel_label_x_offset
+            ha_txt = 'left'
+
+        def _outward(x, ha, delta):
+        # positive delta moves the text farther away from the bar
+            return x - delta if ha == 'right' else x + delta
+
+        # ------- header position -------
+        x_txt_hdr = _outward(x_txt, ha_txt, float(getattr(style, "qnum_header_x_shift", 0.0)))
+
+
+        # split by type
+        others    = [s for s in subs if getattr(s, "split_type", None) != "sideband"]
+        sidebands = [s for s in subs if getattr(s, "split_type", None) == "sideband"]
+
+        # -------- optional header ("m_j") drawn once per parent --------
+        if show_header and others:
+            # infer which q-number to print from the first non-sideband label
+            # expects something like "m_j=+1/2" or "m_f=..." from _format_sublevel_text
+            import re as _re
+            header_name = None
+            for s in others:
+                t = _format_sublevel_text(s) or ""
+                m = _re.match(r"^\s*(m_j|m_f|m)\s*=", t)
+                if m:
+                    header_name = m.group(1)
+                    break
+            if header_name:
+                y_top = max(y_map[s.label] for s in others)
+                y_hdr = y_top + pad_factor * cfg.sublevel_uniform_spacing
+                ax.text(
+                    x_txt_hdr, y_hdr, header_name,
+                    fontfamily='Cambria', fontsize=style.sublevel_label_fontsize,
+                    va='bottom', ha=ha_txt
+                )
+
+        # -------- draw each sublevel label (skip hidden types) --------
+
+        # ------- value positions -------
+        x_txt_val = _outward(x_txt, ha_txt, float(getattr(style, "qnum_value_x_shift", 0.0)))
         for lvl in subs:
-            # skip selected types (hide sideband labels, keep Zeeman, etc.)
             if getattr(lvl, "split_type", None) in hide_types:
                 continue
-
-            # flip to left for column 0 parents
-            col = infer_column(lvl.parent, cfg)
-            if col == 0:
-                x_txt = x0 - bar_half - style.sublevel_label_x_offset
-                ha_txt = 'right'
-            else:
-                x_txt = x0 + bar_half + style.sublevel_label_x_offset
-                ha_txt = 'left'
 
             y_txt = y_map[lvl.label] + style.sublevel_label_y_offset
             txt = _format_sublevel_text(lvl)
             if not txt:
                 continue
 
+            # For Zeeman/hyperfine values: strip "m_j=" / "m_f=" → show value only
+            if value_only and getattr(lvl, "split_type", None) != "sideband":
+                if "=" in txt:
+                    txt = txt.split("=", 1)[1].strip()
+
             ax.text(
-                x_txt, y_txt, txt,
+                x_txt_val, y_txt, txt,
                 fontfamily='Cambria',
                 va='center', ha=ha_txt,
                 fontsize=style.sublevel_label_fontsize
             )
+
 
 
 
