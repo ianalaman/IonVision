@@ -42,7 +42,7 @@ def zeeman_split(parent: Level, B: float) -> List[Level]:
         if not s.startswith('-'):
             s = '+' + s
         child = Level(
-            label      = f"{parent.label}, m={s}",
+            label      = f"{parent.label}, m_j={s}",
             energy     = parent.energy + conv * mJ,
             zeeman     = False,
             sublevel   = parent.sublevel + 1,
@@ -50,6 +50,45 @@ def zeeman_split(parent: Level, B: float) -> List[Level]:
             split_type = "zeeman"
         )
         out.append(child)
+
+    parent.children = out
+    return out
+
+def sideband_split(parent: Level, gap: float) -> List[Level]:
+    """
+    Creates two levels spaced by `gap` above and below the parent level.
+    
+    Parameters:
+        parent (Level): The reference energy level.
+        gap (float): Energy offset from the parent in cm^-1 (or whatever units parent.energy uses).
+    
+    Returns:
+        List[Level]: Two new Level objects (upper and lower).
+    """
+    if gap <= 0:
+        return []
+
+    out: List[Level] = []
+
+    # Upper level
+    out.append(Level(
+        label      = f"{parent.label}, blue sideband",
+        energy     = parent.energy + gap,
+        sideband   = None,
+        sublevel   = parent.sublevel + 1,
+        parent     = parent,
+        split_type = "sideband"
+    ))
+
+    # Lower level
+    out.append(Level(
+        label      = f"{parent.label}, red sideband",
+        energy     = parent.energy - gap,
+        sideband   = None,
+        sublevel   = parent.sublevel + 1,
+        parent     = parent,
+        split_type = "sideband"
+    ))
 
     parent.children = out
     return out

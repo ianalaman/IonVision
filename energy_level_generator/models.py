@@ -1,7 +1,7 @@
 # models.py
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Any
+from typing import Optional, Union, List, Dict, Any
 
 
 @dataclass
@@ -23,6 +23,7 @@ class Level:
     label:    str
     energy:   float
     zeeman:   bool = False
+    sideband: Optional[ List[Dict[str, Any]]] = None
     sublevel: int  = 0
     parent:   Optional[Level] = None
     split_type: Optional[str] = None

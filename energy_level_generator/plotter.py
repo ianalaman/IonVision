@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch
 import math
 from typing import List, Dict
+import re
+
 
 from energy_level_generator.models import Level
 from energy_level_generator.layout import compute_x_map, compute_y_map, LayoutConfig, infer_column
@@ -12,6 +14,33 @@ from energy_level_generator.style  import StyleConfig
 from energy_level_generator.format import format_term_symbol, format_ion_label
 
 from collections import defaultdict
+
+def _format_sublevel_text(lvl):
+    """
+    Return a short label for a sublevel:
+      - Prefer meta['m_f'] or meta['m_j'] if present.
+      - Else parse "m_f=..." or "m_j=..." or "m=..." from the label.
+      - Else, if it's a sideband, show the sideband text.
+      - Else return "".
+    """
+    meta = getattr(lvl, "meta", {}) or {}
+
+    # 1) prefer structured meta
+    for nm in ("m_f", "m_j", "m"):
+        if nm in meta and meta[nm] is not None:
+            return f"{nm}={meta[nm]}"
+
+    # 2) fallback: parse from label
+    m = re.search(r"\b(m_f|m_j|m)\s*=\s*([+-]?\d+(?:/\d+)?)", getattr(lvl, "label", "") or "")
+    if m:
+        return f"{m.group(1)}={m.group(2)}"
+
+    # 3) sideband children: show tail of label (e.g. "red sideband")
+    if getattr(lvl, "split_type", None) == "sideband":
+        parts = (lvl.label or "").split(",")
+        return parts[-1].strip() if parts else ""
+
+    return ""
 
 
 def draw_levels(
@@ -91,24 +120,39 @@ def draw_levels(
             # )
 
         else:
-            # just draw the little sublevel tick
-            if lvl.parent and lvl.parent.label in parent_labels:
-                tick_color, ls, lw, length = (
-                    style.parent_sublevel_tick_color,
-                    style.parent_sublevel_tick_linestyle,
-                    style.parent_sublevel_tick_line_width,
-                    style.parent_sublevel_tick_length
+            # sublevel tick styling
+            if getattr(lvl, "split_type", None) == "sideband":
+                # choose colors for sidebands
+                name = (lvl.label or "").lower()
+                sb_color = (
+                    getattr(style, "sideband_blue_color", "blue") if "blue sideband" in name
+                    else getattr(style, "sideband_red_color", "red") if "red sideband" in name
+                    else getattr(style, "sublevel_tick_color", "k")
                 )
+                ls = getattr(style, "sublevel_tick_linestyle", "-")
+                lw = getattr(style, "sublevel_tick_line_width", 1.5)
+                length = getattr(style, "sideband_tick_length", getattr(style, "sublevel_tick_length", 1.0))
+                tick_color = sb_color
             else:
-                tick_color, ls, lw, length = (
-                    style.sublevel_tick_color,
-                    style.sublevel_tick_linestyle,
-                    style.sublevel_tick_line_width,
-                    style.sublevel_tick_length
-                )
+                if lvl.parent and lvl.parent.label in parent_labels:
+                    tick_color, ls, lw, length = (
+                        style.parent_sublevel_tick_color,
+                        style.parent_sublevel_tick_linestyle,
+                        style.parent_sublevel_tick_line_width,
+                        style.parent_sublevel_tick_length
+                    )
+                else:
+                    tick_color, ls, lw, length = (
+                        style.sublevel_tick_color,
+                        style.sublevel_tick_linestyle,
+                        style.sublevel_tick_line_width,
+                        style.sublevel_tick_length
+                    )
+
             tick_half = bar_half * length
             ax.hlines(y, x - tick_half, x + tick_half,
-                      color=tick_color, lw=lw, linestyle=ls)
+                    color=tick_color, lw=lw, linestyle=ls)
+
 
     # 3) Stack sublevel “m=” labels at each parent
     from collections import defaultdict
@@ -130,14 +174,17 @@ def draw_levels(
                 ha_txt = 'left'
 
             y_txt = y_map[lvl.label] + style.sublevel_label_y_offset
-            ax.text(
-                x_txt,
-                y_txt,
-                lvl.label.split("m_j=")[1],
-                fontfamily='Cambria',
-                va='center', ha=ha_txt,
-                fontsize=style.sublevel_label_fontsize
-            )
+            txt = _format_sublevel_text(lvl)
+            if txt:  # only draw if we have something meaningful
+                ax.text(
+                    x_txt,
+                    y_txt,
+                    txt,
+                    fontfamily='Cambria',
+                    va='center', ha=ha_txt,
+                    fontsize=style.sublevel_label_fontsize
+                )
+
 
 import math
 from collections import defaultdict

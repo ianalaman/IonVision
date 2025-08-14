@@ -25,6 +25,7 @@ Notes and assumptions:
 - All vertical values use the same units as `Level.energy`.
 """
 
+import re
 from dataclasses import dataclass
 from typing import List, Dict
 import numpy as np
@@ -34,6 +35,51 @@ from typing import Callable
 from fractions import Fraction
 from collections.abc import Hashable
 from collections import defaultdict
+
+
+# ---------- quantum number parsing helpers (m_j, m_f, fallback m) ----------
+_QNUM_RES = {
+    "m_j": re.compile(r"\bm_j\s*=\s*([+-]?\d+(?:/\d+)?)"),
+    "m_f": re.compile(r"\bm_f\s*=\s*([+-]?\d+(?:/\d+)?)"),
+    "m":   re.compile(r"\bm\s*=\s*([+-]?\d+(?:/\d+)?)"),
+}
+
+def _qnum_value(level, names=("m_j", "m_f", "m")):
+    """
+    Returns (name, float_value) from level.meta[name] if present, else parses label.
+    If none found, returns (None, None).
+    """
+    meta = getattr(level, "meta", {}) or {}
+    # Prefer structured metadata (set it in your splitters)
+    for nm in names:
+        if nm in meta and meta[nm] is not None:
+            v = meta[nm]
+            if isinstance(v, (int, float)): 
+                return nm, float(v)
+            try:
+                return nm, float(Fraction(str(v)))
+            except Exception:
+                pass
+    # Fallback: parse from label (handles "+3/2", "-1/2", etc.)
+    label = getattr(level, "label", "") or ""
+    for nm in names:
+        rx = _QNUM_RES.get(nm)
+        if not rx:
+            continue
+        m = rx.search(label)
+        if m:
+            try:
+                return nm, float(Fraction(m.group(1)))
+            except Exception:
+                pass
+    return None, None
+
+def _qnum_sort_key(level, names=("m_j", "m_f", "m")):
+    """
+    Sort key: known qnums (by numeric value) first; unknown go last.
+    """
+    _, val = _qnum_value(level, names)
+    return (val is None, 0.0 if val is None else val)
 
 
 @dataclass
@@ -102,6 +148,10 @@ class LayoutConfig:
     # sub_vis_max: float = 1000          # (Legacy idea) Maximum visual offset.
     sublevel_uniform_spacing: float = 1000.0
     sublevel_uniform_centered: bool = True
+
+    # Vertical offset for sidebands around their Zeeman parent
+    sideband_vertical_offset: float = 350.0
+
 
 
 def infer_column(level: Level, cfg: LayoutConfig) -> int:
@@ -235,19 +285,22 @@ def compute_sublevel_x_map(
 
     sub_map: Dict[str, float] = {}
     for parent_lbl, subs in subs_by_parent.items():
-        base_x = base_map.get(parent_lbl, 0.0)
-        n = len(subs)
-        if n == 0:
-            continue
+      base_x = base_map.get(parent_lbl, 0.0)
 
-        # Sort by m (e.g., "m=+3/2") → ensures negative m on the left
-        subs_sorted = sorted(subs, key=lambda L: float(Fraction(L.label.split("m_j=")[1])))
+      sidebands = [s for s in subs if getattr(s, "split_type", None) == "sideband"]
+      others    = [s for s in subs if getattr(s, "split_type", None) != "sideband"]
 
-        # Symmetric offsets across the specified jitter span
-        offsets = np.linspace(-cfg.x_jitter, cfg.x_jitter, n)
+      if others:
+          others_sorted = sorted(others, key=_qnum_sort_key)
+          offsets = np.linspace(-cfg.x_jitter, cfg.x_jitter, len(others_sorted))
+          for lvl, off in zip(others_sorted, offsets):
+              sub_map[lvl.label] = base_x + off
 
-        for lvl, off in zip(subs_sorted, offsets):
-            sub_map[lvl.label] = base_x + off
+      # pin sidebands to immediate parent x
+      parent_x = sub_map.get(parent_lbl, base_x)
+      for sb in sidebands:
+          sub_map[sb.label] = parent_x
+
 
     return sub_map
 
@@ -343,28 +396,36 @@ def compute_y_map(
             subs_by_parent[lvl.parent.label].append(lvl)
 
     for parent_lbl, subs in subs_by_parent.items():
-        parent_y = y_map.get(parent_lbl)
-        if parent_y is None:
-            # If parent wasn't placed (shouldn't happen with consistent inputs)
-            continue
+      parent_y = y_map.get(parent_lbl)
+      if parent_y is None:
+          continue
 
-        # Sort sublevels by m so negatives appear lower (or left in x)
-        sorted_subs = sorted(
-            subs,
-            key=lambda L: float((Fraction(L.label.split("m_j=")[1])))
-        )
-        n = len(sorted_subs)
-        step = cfg.sublevel_uniform_spacing
+      # partition: zeeman/hyperfine-like vs sidebands
+      sidebands = [s for s in subs if getattr(s, "split_type", None) == "sideband"]
+      others    = [s for s in subs if getattr(s, "split_type", None) != "sideband"]
 
-        # Choose starting offset: centered around parent or starting at parent
-        if cfg.sublevel_uniform_centered:
-            start = -step * (n - 1) / 2
-        else:
-            start = 0.0
+      # 1) place non-sideband sublevels with uniform spacing (by m)
+      if others:
+          sorted_others = sorted(others, key=_qnum_sort_key)
+          n = len(sorted_others)
+          step = cfg.sublevel_uniform_spacing
+          start = -step * (n - 1) / 2 if cfg.sublevel_uniform_centered else 0.0
+          for i, lvl in enumerate(sorted_others):
+              y_map[lvl.label] = parent_y + start + i * step
 
-        # Assign uniform vertical positions
-        for i, lvl in enumerate(sorted_subs):
-            y_map[lvl.label] = parent_y + start + i * step
+      # 2) place sidebands tightly around the parent (blue above, red below)
+      if sidebands:
+          off = getattr(cfg, "sideband_vertical_offset", 100.0)
+          for s in sidebands:
+              name = (s.label or "").lower()
+              if "blue sideband" in name:
+                  y_map[s.label] = parent_y + off
+              elif "red sideband" in name:
+                  y_map[s.label] = parent_y - off
+              else:
+                  # fallback: keep them close but below
+                  y_map[s.label] = parent_y - off
+
 
     return y_map
 
@@ -414,11 +475,9 @@ def compute_sublevel_y_map(
         if parent_y is None:
             continue
 
-        # Sort by m quantum number (negative m first)
-        subs_sorted = sorted(
-            subs,
-            key=lambda L: float(Fraction(L.label.split("m=")[1]))
-        )
+       # Sort by available m_* (m_j/m_f/m). Negative values first naturally.
+        subs_sorted = sorted(subs, key=_qnum_sort_key)
+
         n = len(subs_sorted)
 
         # Symmetric jitter offsets (or 0 for single sublevel)
