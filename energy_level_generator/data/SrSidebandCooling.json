@@ -16,7 +16,8 @@
     {
         "label": "4d  2D5/2",
         "energy": 14995.0,
-        "zeeman": true
+        "zeeman": true,
+        "sideband": { "m_j": ["-5/2"] }
     },
     {
         "label": "5p  2P1/2",
@@ -33,7 +34,7 @@
     "transitions": [
         {
             "from": "5s  2S1/2, m_j=-1/2",
-            "to":   "4d  2D5/2, m_j=-5/2",
+            "to":   "4d  2D5/2, m_j=-5/2, red sideband",
             "label":"674 nm (detuned)",
             "color":"purple",
             "style":"solid",
