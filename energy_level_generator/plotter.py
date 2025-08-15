@@ -212,10 +212,13 @@ def draw_levels(
                     va='bottom', ha=ha_txt
                 )
 
-        # -------- draw each sublevel label (skip hidden types) --------
 
+        
         # ------- value positions -------
         x_txt_val = _outward(x_txt, ha_txt, float(getattr(style, "qnum_value_x_shift", 0.0)))
+        
+        # -------- draw each sublevel label (skip hidden types) --------
+
         for lvl in subs:
             if getattr(lvl, "split_type", None) in hide_types:
                 continue
