@@ -34,7 +34,7 @@
     "transitions": [
         {
             "from": "5s  2S1/2, m_j=-1/2",
-            "to":   "4d  2D5/2, m_j=-5/2, red sideband",
+            "to":   "4d  2D5/2, m_j=-5/2",
             "label":"674 nm (detuned)",
             "color":"purple",
             "style":"solid",
