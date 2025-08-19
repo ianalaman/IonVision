@@ -406,7 +406,11 @@ def compute_y_map(
 
       # 1) place non-sideband sublevels with uniform spacing (by m)
       if others:
-          sorted_others = sorted(others, key=_qnum_sort_key)
+          # NEW: sort by 'F' if present, else by _qnum_sort_key
+          def _sort_key(l):
+              F = (l.meta or {}).get("F")
+              return (0, float(F)) if F is not None else (1, ) + _qnum_sort_key(l)
+          sorted_others = sorted(others, key=_sort_key)
           n = len(sorted_others)
           step = cfg.sublevel_uniform_spacing
           start = -step * (n - 1) / 2 if cfg.sublevel_uniform_centered else 0.0
