@@ -12,7 +12,9 @@ from energy_level_generator.models import Level
 
 # Pre-compile regex patterns
 _ISOTOPE_RE = re.compile(r"(\d+)([A-Za-z]+)([+-]\d*|\+|-)?")
-_TERM_RE    = re.compile(r"(\d+)([A-Za-z])(\d+)/(\d+)")  # multiplicity, term letter, J numerator/denominator
+_TERM_RE = re.compile(
+    r"(\d+)([A-Za-z])(\d+)/(\d+)"
+)  # multiplicity, term letter, J numerator/denominator
 
 
 def format_ion_label(ion: str) -> str:
@@ -46,8 +48,6 @@ def format_term_symbol(label: Union[str, Level]) -> str:
     multiplicity, term_letter, num, den = m.groups()
 
     math = (
-        r"$"
-        rf"\mathrm{{{orb}}}^{{{multiplicity}}} {term_letter}_{{{num}/{den}}}"
-        r"$"
+        r"$" rf"\mathrm{{{orb}}}^{{{multiplicity}}} {term_letter}_{{{num}/{den}}}" r"$"
     )
     return math

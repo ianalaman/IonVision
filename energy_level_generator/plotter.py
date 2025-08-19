@@ -116,14 +116,18 @@ def draw_levels(  # pylint: disable=too-many-arguments,too-many-locals,too-many-
                 tick_color = (
                     getattr(style, "sideband_blue_color", "blue")
                     if "blue sideband" in name
-                    else getattr(style, "sideband_red_color", "red")
-                    if "red sideband" in name
-                    else getattr(style, "sublevel_tick_color", "k")
+                    else (
+                        getattr(style, "sideband_red_color", "red")
+                        if "red sideband" in name
+                        else getattr(style, "sublevel_tick_color", "k")
+                    )
                 )
                 ls = getattr(style, "sublevel_tick_linestyle", "-")
                 lw = getattr(style, "sublevel_tick_line_width", 1.5)
                 length = getattr(
-                    style, "sideband_tick_length", getattr(style, "sublevel_tick_length", 1.0)
+                    style,
+                    "sideband_tick_length",
+                    getattr(style, "sublevel_tick_length", 1.0),
                 )
             else:
                 c_override = (lvl.meta or {}).get("color")
@@ -139,7 +143,9 @@ def draw_levels(  # pylint: disable=too-many-arguments,too-many-locals,too-many-
                     length = style.sublevel_tick_length
 
             tick_half = bar_half * length
-            ax.hlines(y, x - tick_half, x + tick_half, color=tick_color, lw=lw, linestyle=ls)
+            ax.hlines(
+                y, x - tick_half, x + tick_half, color=tick_color, lw=lw, linestyle=ls
+            )
 
     # group sublevels by parent
     subs_by_parent: Dict[str, List[Level]] = defaultdict(list)
@@ -168,7 +174,9 @@ def draw_levels(  # pylint: disable=too-many-arguments,too-many-locals,too-many-
             x_txt = x0 + bar_half + style.sublevel_label_x_offset
             ha_txt = "left"
 
-        x_txt_hdr = _outward(x_txt, ha_txt, float(getattr(style, "qnum_header_x_shift", 0.0)))
+        x_txt_hdr = _outward(
+            x_txt, ha_txt, float(getattr(style, "qnum_header_x_shift", 0.0))
+        )
 
         # non-sideband entries for header inference
         others = [s for s in subs if getattr(s, "split_type", None) != "sideband"]
@@ -196,7 +204,9 @@ def draw_levels(  # pylint: disable=too-many-arguments,too-many-locals,too-many-
                 )
 
         # value positions
-        x_txt_val = _outward(x_txt, ha_txt, float(getattr(style, "qnum_value_x_shift", 0.0)))
+        x_txt_val = _outward(
+            x_txt, ha_txt, float(getattr(style, "qnum_value_x_shift", 0.0))
+        )
 
         # draw values
         for s in subs:
@@ -206,7 +216,11 @@ def draw_levels(  # pylint: disable=too-many-arguments,too-many-locals,too-many-
             txt = _format_sublevel_text(s)
             if not txt:
                 continue
-            if value_only and getattr(s, "split_type", None) != "sideband" and "=" in txt:
+            if (
+                value_only
+                and getattr(s, "split_type", None) != "sideband"
+                and "=" in txt
+            ):
                 txt = txt.split("=", 1)[1].strip()
             ax.text(
                 x_txt_val,
@@ -330,7 +344,9 @@ def plot_energy_levels(
     draw_levels(ax, levels, x_map, y_map, layout_cfg, style_cfg)
     draw_transitions(ax, transitions, x_map, y_map, style_cfg)
 
-    ax.legend(loc=style_cfg.legend_loc, fontsize=style_cfg.legend_fontsize, frameon=False)
+    ax.legend(
+        loc=style_cfg.legend_loc, fontsize=style_cfg.legend_fontsize, frameon=False
+    )
 
     ion_label = format_ion_label(data.get("ion", ""))
     title_text = data.get("title", "")
