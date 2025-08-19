@@ -1,4 +1,7 @@
 # style.py
+"""
+Styling configuration for energy level diagrams.
+"""
 
 from dataclasses import dataclass
 from typing import Mapping
@@ -11,7 +14,7 @@ class StyleConfig:
     zeeman_bar_color:      str             = "black"
 
     # ─── Parent‐level bar overrides ────────────────────────────────────────────
-    parent_bar_color:      str             = "#929292"
+    parent_bar_color:      str             = "#7B7B7B"
     parent_bar_linestyle:  str             = "dotted"
     parent_bar_line_width: float           = 1.0
 
@@ -63,3 +66,6 @@ class StyleConfig:
     legend_loc:           str             = "lower right"
 
     hide_split_types = {"sideband"}   # hides only sideband labels
+
+    hide_split_types: set = set()          # e.g. {"sideband"} or {"hyperfine_mF"}
+    F_legend: bool = True                  # show legend entries per F color if present
