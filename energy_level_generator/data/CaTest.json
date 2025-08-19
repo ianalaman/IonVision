@@ -1,76 +1,31 @@
 {
-  "title": "Optical Pumping (Prep Down)",
-  "ion": "88Sr+",
-  "unit": "cm$^{-1}$",
+  "element": "Ca",
+  "isotope": 43,
   "levels": [
     {
-      "label": "4s  2S1/2",
+      "term": "4S1/2",
       "energy": 0.0,
-      "zeeman": true
+      "I": 3.5,
+      "magnifier": 1000,
+      "F_colors": {
+        "4": "#cc0000",
+        "3": "#0000cc"
+      }
+      // A and B are not explicitly given here; will be fetched from API (e.g., A≈3245 MHz, B≈0 for 4S1/2)
     },
     {
-      "label": "4p  2P1/2",
-      "energy": 25189.0,
-      "zeeman": true
-    },
-    {
-      "label": "4p  2P3/2",
-      "energy": 25446.0,
-      "zeeman": true
-    },
-    {
-      "label": "4d  2D3/2",
-      "energy": 13661.0,
-      "zeeman": true
-    },
-    {
-      "label": "4d  2D5/2",
-      "energy": 13713.0,
-      "zeeman": true
-    }
-  ],
-  "transitions": [
-    {
-      "from": "4s  2S1/2, m=-1/2",
-      "to":   "4p  2P1/2, m=-1/2",
-      "label": "397 nm",
-      "color": "blue",
-      "style": "solid"
-    },
-    {
-      "from": "4s  2S1/2, m=-1/2",
-      "to":   "4p  2P3/2, m=-1/2",
-      "label": "393 nm",
-      "color": "blue",
-      "style": "solid"
-    },
-    {
-      "from": "4s  2S1/2, m=-1/2",
-      "to":   "4d  2D3/2, m=-1/2",
-      "label": "732 nm",
-      "color": "red",
-      "style": "solid"
-    },
-    {
-      "from": "4s  2S1/2, m=-1/2",
-      "to":   "4d  2D5/2, m=-1/2",
-      "label": "729 nm",
-      "color": "red",
-      "style": "solid"
-    },
-    {
-      "from": "4d  2D5/2, m=-1/2",
-      "to":   "4p  2P3/2, m=-1/2",
-      "label": "854 nm",
-      "color": "red",
-      "style": "solid"
-    },
-    {
-      "from": "4d  2D3/2, m=-1/2",
-      "to":   "4p  2P1/2, m=-1/2",
-      "label": "866 nm",
-      "color": "red",
-      "style": "solid"
+      "term": "3D5/2",
+      "energy": 13700.5,
+      "I": 3.5,
+      "B": 0.4,
+      "F_colors": {
+        "2": "#008000",
+        "3": "#008000",
+        "4": "#008000",
+        "5": "#008000"
+      }
+      // In this example, we override B constant to 0.4 (if, say, API lacked it or we want a custom value).
+      // A will be fetched based on "3D5/2". All F levels share the same color here for simplicity.
     }
   ]
 }
