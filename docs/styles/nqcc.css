@@ -1,0 +1,138 @@
+/* =========
+   NQCC / UKRI palette tokens (from the report)
+   ========= */
+:root{
+  /* Core brand */
+  --ukri-navy:   #2E2D62;   /* header/nav background */
+  --nqcc-blue:   #1E5DF8;   /* headings, primary action */
+  --nqcc-orange: #FF6900;   /* links, accents */
+  --nqcc-teal:   #34D5AE;   /* hover/secondary accent */
+
+  /* Soft neutrals */
+  --nqcc-grey-100: #ECECEC; /* table/blocks background */
+  --nqcc-grey-500: #898988; /* secondary text */
+
+  /* Wire into Material variables */
+  --md-primary-fg-color:        var(--ukri-navy);  /* header/nav */
+  --md-primary-fg-color--light: #3a377e;
+  --md-primary-fg-color--dark:  #211f4a;
+
+  --md-accent-fg-color:         var(--nqcc-orange);
+  --md-typeset-a-color:         var(--nqcc-orange);
+
+  --md-default-fg-color:        #202124;  /* high-contrast body text */
+  --md-default-bg-color:        #ffffff;
+}
+
+/* =========
+   Header & logo
+   ========= */
+.md-header {
+  background-color: var(--ukri-navy); /* ensure override even with custom scheme */
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+}
+.md-header__button.md-logo img {
+  height: 36px !important;  /* adjust if you want it larger/smaller */
+  width: auto !important;
+}
+
+/* =========
+   Headings (match report’s bright blue)
+   ========= */
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3 {
+  color: var(--nqcc-blue);
+}
+
+/* =========
+   Navigation (left) & ToC (right)
+   ========= */
+/* Active item = orange, hover = teal */
+.md-nav__item .md-nav__link--active { color: var(--nqcc-orange); }
+.md-nav__link:hover { color: var(--nqcc-teal); }
+
+/* Right-hand ToC (secondary sidebar) */
+.md-sidebar--secondary .md-nav__link--active,
+.md-sidebar--secondary .md-nav__link:hover {
+  color: var(--nqcc-orange);
+}
+
+/* =========
+   Links & buttons
+   ========= */
+a:hover {
+  color: #E05F00;              /* slightly darker orange */
+  text-decoration: underline;
+}
+
+/* Outline button uses bright blue; primary filled uses bright blue too */
+.md-typeset .md-button {
+  color: var(--nqcc-blue);
+  border-color: var(--nqcc-blue);
+}
+.md-typeset .md-button:hover {
+  color: #1446bf;              /* darker blue hover */
+  border-color: #1446bf;
+}
+.md-typeset .md-button--primary {
+  background-color: var(--nqcc-blue);
+  border-color: var(--nqcc-blue);
+}
+.md-typeset .md-button--primary:hover {
+  background-color: #1446bf;
+  border-color: #1446bf;
+}
+
+/* =========
+   Admonitions (notes/tips/warnings)
+   ========= */
+/* info → teal */
+.md-typeset .admonition.info,
+.md-typeset details.info { border-left-color: var(--nqcc-teal); }
+.md-typeset .admonition.info > .admonition-title,
+.md-typeset details.info > summary {
+  background-color: rgba(52, 213, 174, 0.14);
+}
+
+/* warning → orange */
+.md-typeset .admonition.warning,
+.md-typeset details.warning { border-left-color: var(--nqcc-orange); }
+.md-typeset .admonition.warning > .admonition-title,
+.md-typeset details.warning > summary {
+  background-color: rgba(255, 105, 0, 0.14);
+}
+
+/* tip → bright blue */
+.md-typeset .admonition.tip,
+.md-typeset details.tip { border-left-color: var(--nqcc-blue); }
+.md-typeset .admonition.tip > .admonition-title,
+.md-typeset details.tip > summary {
+  background-color: rgba(30, 93, 248, 0.14);
+}
+
+/* =========
+   Code & tables (soft neutral vibe)
+   ========= */
+.md-typeset code {
+  color: #1f2937;
+  background: #f7f7fa;
+}
+.md-clipboard:hover { color: var(--nqcc-orange); }
+
+/* Table header tint and subtle borders */
+.md-typeset table thead th {
+  background: var(--nqcc-grey-100);
+  color: #1f2937;
+  border-bottom: 2px solid #d9d9d9;
+}
+.md-typeset table td, .md-typeset table th {
+  border-color: #e6e6e6;
+}
+
+/* =========
+   Minor polish
+   ========= */
+.md-typeset .footnote, .md-typeset figcaption {
+  color: var(--nqcc-blue);   /* captions like in the report */
+}
