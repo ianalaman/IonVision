@@ -1,0 +1,54 @@
+site_name: Energy Level and Pulse Sequence Generator
+site_description: Ion-trap diagram generator toolkit
+site_url: https://ianalaman.github.io/NQCC/  # ← set if you publish
+
+theme:
+  name: material
+  logo: assets/NQCC_logo.png        # small header logo (landscape is fine)
+  favicon: assets/NQCC_logo.png     # optional; replace if you have a square icon
+  features:
+    - navigation.expand
+    - navigation.sections
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+
+nav:
+  - Home: index.md
+  - Tutorials: tutorials.md
+  - How-To Guides: how-to-guides.md
+  - Reference: reference.md
+  - Explanation: explanation.md
+  - API:
+      - Energy Level Generator: reference.md         # replace with real API page(s)
+      - Pulse Sequence Generator: reference.md
+
+plugins:
+  - search
+  # Enable later if you want auto API docs from docstrings:
+  # - mkdocstrings:
+  #     handlers:
+  #       python:
+  #         options:
+  #           docstring_style: google   # or "numpy"/"sphinx"
+  #           show_source: true
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - attr_list                   # ← lets us size the hero logo in Markdown
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.details
+  - pymdownx.tabbed
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
