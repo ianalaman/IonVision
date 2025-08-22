@@ -32,7 +32,7 @@ nav:
   - Reference:
       - Parameters & Config Options: reference/config.md
       - Sequence Syntax: reference/sequences.md
-  - Explanation:
+  - Why create this toolkit?:
       - Background: explanation/background.md
       - Design Choices: explanation/design.md
       - Physics Notes: explanation/physics.md
