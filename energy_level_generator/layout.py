@@ -1,29 +1,33 @@
 """
-layout.py — deterministic x/y layout for atomic/molecular energy level diagrams.
+layout.py — deterministic x/y layout for energy-level diagrams.
 
-This module assigns **x** (horizontal) and **y** (vertical) coordinates to
-`Level` objects for plotting. The placement is column-based (e.g., S, P, D, F…)
-with optional “energy grouping” along the vertical axis and structured offsets
-for sub-levels (m-resolved states).
+Assigns **x** (horizontal) and **y** (vertical) coordinates to `Level` objects for
+plotting. Placement is column-based (S, P, D, F, …) with optional energy
+grouping on **y** and structured offsets for sub-levels.
 
-Key ideas:
-- **Columns**: Levels are mapped to integer columns using parts of their
-  spectroscopic term symbols (see `infer_column`).
-- **Base levels** (sublevel == 0): horizontally fanned within their column and
-  vertically jittered within “energy groups” to reduce overplotting.
-- **Sublevels** (sublevel > 0): horizontally jittered around their parent and
-  vertically spaced uniformly above/below the parent energy (or grouped y),
-  ordered by the m quantum number extracted from the label.
+Concepts
+--------
+- **Columns**: Chosen from spectroscopic term symbols via `infer_column`.
+- **Base levels** (`sublevel == 0`): 
+  - Horizontal: fanned within the column (bar width `2*cfg.bar_half`).
+  - Vertical: fanned inside energy groups (`cfg.energy_group_key`) using
+    `cfg.y_jitter * cfg.energy_group_y_scale` to reduce overplotting.
+- **Sublevels** (`sublevel > 0`):
+  - Horizontal: jittered about the parent (±`cfg.x_jitter`).
+  - Vertical: uniformly spaced by `cfg.sublevel_uniform_spacing`, centered if
+    `cfg.sublevel_uniform_centered`. Order set by parsed m quantum number.
 
-Notes and assumptions:
-- `Level.label` must contain at least two whitespace-separated tokens; the
-  second token is the term (e.g., "2P3/2"). For sublevels it must also contain
-  "m=<rational>" somewhere (e.g., "... m=+3/2").
-- `cfg.column_letters` should contain the exact **lookup keys** used by
-  `infer_column` (by default, that means strings like "S1/2", "P3/2", etc.,
-  not just "S", "P", "D"). See `infer_column` docstring.
-- All vertical values use the same units as `Level.energy`.
+Assumptions
+-----------
+- `Level.label` has ≥2 whitespace-separated tokens; the **second** token is the
+  term (e.g. `"2P3/2"`). Sublevels must also contain `m=<rational>` somewhere
+  (e.g. `"... m=+3/2"`), or provide it in `Level.meta`.
+- `cfg.column_letters` must include the exact lookup keys used by
+  `infer_column` (e.g. `"S1/2"`, `"P3/2"`, not just `"S"`, `"P"`).
+- All **y** values use the same units as `Level.energy`.
+
 """
+
 
 import re
 from dataclasses import dataclass

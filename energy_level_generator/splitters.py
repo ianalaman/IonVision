@@ -1,15 +1,10 @@
 """Splitting kernels for energy level trees: Zeeman, sideband, hyperfine.
 
-This module defines small, focused splitter classes that take a ``Level`` and add
-physically motivated sub-structure under it. Classes are designed to be imported
-and composed by a higher-level builder.
-
-Pylint notes:
-- These classes intentionally expose few public methods; we disable the
-  ``too-few-public-methods`` warning per class to keep the API compact.
+Provides splitter classes that generate physically motivated sub-structures
+under a Level. These are intended to be composed by a higher-level builder.
 """
-from __future__ import annotations
 
+from __future__ import annotations
 from fractions import Fraction
 from typing import Dict, List, Optional, Tuple
 import re
@@ -17,37 +12,22 @@ import re
 from energy_level_generator.models import Level
 from energy_level_generator.physics import zeeman_split
 
-# -----------------------------------------------------------------------------
-# Base interface
-# -----------------------------------------------------------------------------
-
 
 class Splitter:  # pylint: disable=too-few-public-methods
-    """Abstract protocol for a splitting kernel."""
+    """Abstract base interface for all splitting kernels."""
 
     name: str
 
-    def split(self, lvl: Level) -> List[Level]:  # pragma: no cover - interface only
-        """Given one ``Level``, return the created children or ``[]``.
-
-        Implementations typically also append the new children to ``lvl.children``
-        and wire ``parent``/``sublevel``/``split_type`` fields.
-        """
+    def split(self, lvl: Level) -> List[Level]:
+        """Split a level into children. Must be implemented by subclasses."""
         raise NotImplementedError
 
 
-# -----------------------------------------------------------------------------
-# Zeeman
-# -----------------------------------------------------------------------------
-
-
 class ZeemanSplitter(Splitter):  # pylint: disable=too-few-public-methods
-    """Zeeman splitting wrapper around ``physics.zeeman_split``.
+    """Zeeman splitter using physics.zeeman_split.
 
-    Parameters
-    ----------
-    b_tesla : float
-        Magnetic field strength (Tesla).
+    Args:
+        b_tesla: Magnetic field strength in Tesla.
     """
 
     name = "zeeman"
@@ -56,37 +36,25 @@ class ZeemanSplitter(Splitter):  # pylint: disable=too-few-public-methods
         self.b_tesla = float(b_tesla)
 
     def split(self, lvl: Level) -> List[Level]:
-        # Only split if this level is flagged for Zeeman and B>0
+        """Generate Zeeman children for a Level if enabled and B > 0."""
         if not getattr(lvl, "zeeman", False) or self.b_tesla <= 0:
             return []
-
-        # Delegate to physics. Expecting ``List[Level]`` back.
         children = zeeman_split(lvl, self.b_tesla)
-
-        # Wire tree info
         for child in children:
             child.sublevel = (lvl.sublevel or 0) + 1
             child.parent = lvl
             child.split_type = self.name
-            # Prevent further Zeeman on sub-levels by default
-            child.zeeman = False
-
+            child.zeeman = False  # disable recursive Zeeman
         lvl.children = children
         return children
 
 
-# -----------------------------------------------------------------------------
-# Sidebands (e.g., motional sidebands around a parent line)
-# -----------------------------------------------------------------------------
-
-
 class SidebandSplitter(Splitter):  # pylint: disable=too-few-public-methods
-    """Create red/blue sideband children around selected parent levels.
+    """Generate red/blue motional sidebands around selected levels.
 
-    If ``base.sideband`` is a mapping with key ``"m_j"`` listing target values
-    (strings like ``"-5/2"``), the sidebands are attached to the matching Zeeman
-    child(ren) whose label contains ``m_j=...``. Otherwise, sidebands are attached
-    to ``base`` itself.
+    Args:
+        gap: Energy gap for sidebands (same units as energy).
+        label_suffixes: Tuple of suffix labels for (lower, higher).
     """
 
     name = "sideband"
@@ -97,134 +65,94 @@ class SidebandSplitter(Splitter):  # pylint: disable=too-few-public-methods
         label_suffixes: Tuple[str, str] = ("red sideband", "blue sideband"),
     ) -> None:
         self.gap = float(gap)
-        self.label_suffixes = label_suffixes  # [lower, higher]
+        self.label_suffixes = label_suffixes
 
     @staticmethod
     def _match_mj(child: Level, mj_str: str) -> bool:
-        """Return True if ``child.label`` contains ``m_j={mj_str}``.
-
-        Avoids exceptions by normalizing to an empty string when label is ``None``.
-        """
-        needle = f"m_j={mj_str}"
-        hay = child.label or ""
-        return needle in hay
+        """True if child.label contains m_j={mj_str}."""
+        return f"m_j={mj_str}" in (child.label or "")
 
     def split(
         self, base: Level, zeeman_children: Optional[List[Level]] = None
     ) -> List[Level]:
-        # pylint: disable=too-many-locals
-        """Create sideband children and append them under the chosen parents.
-
-        Parameters
-        ----------
-        base : Level
-            The candidate parent level.
-        zeeman_children : Optional[List[Level]]
-            If provided and ``base.sideband`` specifies particular ``m_j`` values,
-            attach sidebands to those Zeeman children instead of ``base``.
-        """
+        """Attach sidebands to base or specified Zeeman children."""
         if not getattr(base, "sideband", None):
             return []
 
-        targets: List[Level] = []
-        mj_list: List[str] = []
-
         sideband_cfg = base.sideband if isinstance(base.sideband, dict) else {}
-        if isinstance(sideband_cfg, dict) and "m_j" in sideband_cfg:
-            mj_list = list(sideband_cfg["m_j"])  # strings like "-5/2"
+        mj_list = list(sideband_cfg.get("m_j", [])) if isinstance(sideband_cfg, dict) else []
 
+        targets: List[Level] = []
         if zeeman_children and mj_list:
             for mj in mj_list:
-                match = next(
-                    (c for c in zeeman_children if self._match_mj(c, mj)), None
-                )
+                match = next((c for c in zeeman_children if self._match_mj(c, mj)), None)
                 if match:
                     targets.append(match)
-
         if not targets:
             targets = [base]
 
         kids: List[Level] = []
-        offsets = (-self.gap, self.gap)
-        suffixes = self.label_suffixes
-
         for parent in targets:
-            sublevel_idx = (parent.sublevel or 0) + 1
-            for offset, suffix in zip(offsets, suffixes):
+            sub_idx = (parent.sublevel or 0) + 1
+            for offset, suffix in zip((-self.gap, self.gap), self.label_suffixes):
                 child = Level(
                     label=f"{parent.label}, {suffix}",
                     energy=parent.energy + offset,
                     zeeman=False,
                     sideband=None,
-                    sublevel=sublevel_idx,
+                    sublevel=sub_idx,
                     parent=parent,
                     split_type=self.name,
                     children=[],
-                    meta=dict(parent.meta or {}),  # inherit meta (e.g., m_j)
+                    meta=dict(parent.meta or {}),
                 )
                 parent.children.append(child)
                 kids.append(child)
-
         return kids
 
 
-# -----------------------------------------------------------------------------
-# Hyperfine structure
-# -----------------------------------------------------------------------------
-
-_MHZ_TO_CM1 = 1.0e6 * 3.335_640_951_981_52e-11  # Hz->cm^-1, then MHz = 1e6 Hz
-_J_RE = re.compile(r"\b(\d+)([SPDFGHI])([1-9]/2|\d)\b", re.I)  # "2S1/2", "2D3/2", ...
+# Hyperfine splitting helpers/constants
+_MHZ_TO_CM1 = 1.0e6 * 3.335_640_951_981_52e-11  # MHz to cm^-1
+_J_RE = re.compile(r"\b(\d+)([SPDFGHI])([1-9]/2|\d)\b", re.I)
 
 
 def _parse_j_from_label(label: Optional[str]) -> Optional[float]:
-    """Extract J from something like '4s  2S1/2' (second token)."""
+    """Extract J from the second token of label (e.g. '2S1/2')."""
     if not label:
         return None
     toks = label.split()
     if len(toks) < 2:
         return None
-    term = toks[1]  # e.g., '2S1/2'
-    match = _J_RE.search(term)
+    match = _J_RE.search(toks[1])
     if not match:
         return None
-    j_text = match.group(3)  # '1/2' or integer
     try:
-        return float(Fraction(j_text))
+        return float(Fraction(match.group(3)))
     except (ValueError, ZeroDivisionError):
         return None
 
 
 def _allowed_f_values(i_nuc: float, j_val: float) -> List[float]:
-    """Return the list of F values from |I−J| to I+J in unit steps."""
+    """Compute allowed F values from |I−J| to I+J."""
     f_min, f_max = abs(i_nuc - j_val), i_nuc + j_val
-    count = int(round((f_max - f_min) + 1))
-    return [f_min + i for i in range(count)]
+    return [f_min + i for i in range(int(round((f_max - f_min) + 1)))]
 
 
 def _cm1_from_mhz(x_mhz: Optional[float]) -> float:
-    """Convert MHz to cm^-1 (0.0 if ``None``)."""
-    if x_mhz in (None, 0):
-        return 0.0
-    return float(x_mhz) * _MHZ_TO_CM1
+    """Convert MHz to cm^-1."""
+    return 0.0 if x_mhz in (None, 0) else float(x_mhz) * _MHZ_TO_CM1
 
 
 class HyperfineSplitter(Splitter):  # pylint: disable=too-few-public-methods
-    """Build hyperfine F and (optionally) m_F sublevels for a base J-level.
+    """Generate hyperfine F and optional m_F sublevels.
 
-    Zero-field energy shift for a given F:
-
-        K = F(F+1) − I(I+1) − J(J+1)\\
-        E = (A/2)·K + B·[ 3/4·K(K+1) − I(I+1)J(J+1) ] / [ 2I(2I−1)·2J(2J−1) ]
-
-    A and B are given in MHz and converted internally to cm^-1. At B=0, m_F
-    sublevels are degenerate with their F parent level.
-
-    Per-level options (typically via ``Level.meta``):
-        - ``I`` (required to enable hyperfine),
-        - ``A_MHz`` / ``B_MHz`` (overrides),
-        - ``magnifier`` (visual scale, default 1),
-        - ``make_mF`` (bool),
-        - ``F_colors``: optional mapping of F (as string) to a CSS color.
+    Args:
+        i_nuc: Nuclear spin I.
+        a_mhz: A constant (MHz). Overrides defaults if provided.
+        b_mhz: B constant (MHz). Overrides defaults if provided.
+        make_mf: If True, generate m_F sublevels.
+        magnifier: Visual scale multiplier for energy offsets.
+        f_colors: Optional mapping of F (string) to colors.
     """
 
     name = "hyperfine"
@@ -237,7 +165,7 @@ class HyperfineSplitter(Splitter):  # pylint: disable=too-few-public-methods
         make_mf: bool = True,
         magnifier: float = 1.0,
         f_colors: Optional[Dict[str, str]] = None,
-    ) -> None:  # pylint: disable=too-many-arguments
+    ) -> None:
         self.i_nuc = float(i_nuc)
         self.a_mhz = a_mhz
         self.b_mhz = b_mhz
@@ -245,60 +173,41 @@ class HyperfineSplitter(Splitter):  # pylint: disable=too-few-public-methods
         self.magnifier = float(magnifier)
         self.f_colors = f_colors or {}
 
-    # --- hook to fill A/B if not overridden (stub you can route to OITG later) ---
     def _fetch_a_b_if_needed(
         self,
         _element: Optional[str],
         _isotope: Optional[int],
         _term: Optional[str],
     ) -> Tuple[float, float]:
-        """Return (A_MHz, B_MHz).
-
-        If overrides are set on the instance, keep them. This stub returns (0, 0)
-        if nothing is known; wire to a proper database as needed.
-        """
-        a_val = self.a_mhz if self.a_mhz is not None else 0.0
-        b_val = self.b_mhz if self.b_mhz is not None else 0.0
-        return float(a_val), float(b_val)
+        """Return (A_MHz, B_MHz); 0 if not provided."""
+        return float(self.a_mhz or 0.0), float(self.b_mhz or 0.0)
 
     @staticmethod
     def _delta_cm1(
         f_val: float, j_val: float, a_cm1: float, b_cm1: float, i_nuc: float
     ) -> float:
-        """Hyperfine energy offset (cm^-1) for a given F at B=0."""
-        k_val = f_val * (f_val + 1.0) - i_nuc * (i_nuc + 1.0) - j_val * (j_val + 1.0)
-        energy = 0.5 * a_cm1 * k_val
+        """Hyperfine zero-field energy offset for given F."""
+        k = f_val * (f_val + 1) - i_nuc * (i_nuc + 1) - j_val * (j_val + 1)
+        energy = 0.5 * a_cm1 * k
         if b_cm1 != 0.0 and (j_val > 0.5) and (i_nuc > 0.5):
-            denom = (2 * i_nuc * (2 * i_nuc - 1.0)) * (2 * j_val * (2 * j_val - 1.0))
+            denom = (2 * i_nuc * (2 * i_nuc - 1)) * (2 * j_val * (2 * j_val - 1))
             if denom != 0.0:
-                num = 0.75 * k_val * (k_val + 1.0) - i_nuc * (i_nuc + 1.0) * j_val * (
-                    j_val + 1.0
-                )
+                num = 0.75 * k * (k + 1) - i_nuc * (i_nuc + 1) * j_val * (j_val + 1)
                 energy += b_cm1 * (num / denom)
         return energy
 
-    def split(self, base: Level) -> List[Level]:  # pylint: disable=too-many-locals
-        """Create hyperfine F (and optional m_F) children under ``base``.
-
-        Only operates on base levels (``sublevel == 0``). Returns the list of
-        newly created ``Level`` objects and appends them to ``base.children``.
-        """
+    def split(self, base: Level) -> List[Level]:
+        """Generate hyperfine children (F and optional m_F) for a base level."""
         if getattr(base, "sublevel", 0) != 0:
             return []
 
         meta = base.meta or {}
         element = meta.get("element")
         isotope = meta.get("isotope")
-        term = meta.get("term")
-        if term is None and base.label:
-            parts = base.label.split()
-            if len(parts) >= 2:
-                term = parts[1]
+        term = meta.get("term") or (base.label.split()[1] if base.label and len(base.label.split()) >= 2 else None)
 
         j_val_opt = meta.get("J")
-        j_val = (
-            float(Fraction(str(j_val_opt))) if j_val_opt is not None else _parse_j_from_label(base.label)
-        )
+        j_val = float(Fraction(str(j_val_opt))) if j_val_opt is not None else _parse_j_from_label(base.label)
         if j_val is None:
             return []
 
@@ -310,7 +219,6 @@ class HyperfineSplitter(Splitter):  # pylint: disable=too-few-public-methods
         for f_val in _allowed_f_values(self.i_nuc, j_val):
             delta_e = self._delta_cm1(f_val, j_val, a_cm1, b_cm1, self.i_nuc)
             energy_f = base.energy + delta_e * self.magnifier
-
             f_label = f"{base.label}, F={f_val:g}"
             f_level = type(base)(
                 label=f_label,
@@ -321,32 +229,29 @@ class HyperfineSplitter(Splitter):  # pylint: disable=too-few-public-methods
                 parent=base,
                 split_type=self.name,
                 children=[],
-                meta={
-                    **meta,
-                    "I": self.i_nuc,
-                    "J": j_val,
-                    "F": f_val,
-                    "A_MHz": a_mhz,
-                    "B_MHz": b_mhz,
-                    "magnifier": self.magnifier,
-                    "term": term,
-                    "element": element,
-                    "isotope": isotope,
-                    "color": self.f_colors.get(str(int(f_val))),
-                },
+                meta={**meta,
+                      "I": self.i_nuc,
+                      "J": j_val,
+                      "F": f_val,
+                      "A_MHz": a_mhz,
+                      "B_MHz": b_mhz,
+                      "magnifier": self.magnifier,
+                      "term": term,
+                      "element": element,
+                      "isotope": isotope,
+                      "color": self.f_colors.get(str(int(f_val)))},
             )
             base.children.append(f_level)
             kids.append(f_level)
 
             if self.make_mf:
-                # mF values: -F, -F+1, ..., +F (half-integers allowed)
                 m2_min, m2_max = int(round(-2 * f_val)), int(round(2 * f_val))
                 for m2 in range(m2_min, m2_max + 1, 2):
                     m_f = m2 / 2.0
                     mf_label = f"{f_label}, m_f={m_f:g}"
                     mf_level = type(base)(
                         label=mf_label,
-                        energy=energy_f,  # B=0 → degenerate
+                        energy=energy_f,
                         zeeman=False,
                         sideband=None,
                         sublevel=2,
@@ -357,5 +262,4 @@ class HyperfineSplitter(Splitter):  # pylint: disable=too-few-public-methods
                     )
                     f_level.children.append(mf_level)
                     kids.append(mf_level)
-
         return kids

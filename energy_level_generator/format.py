@@ -3,8 +3,8 @@
 Formatting helpers for isotope and term labels for matplotlib mathtext.
 
 Example:
-    format_ion_label("88Sr+") -> "$^{88}\\mathrm{Sr}^{+}$"
-    format_term_symbol("5s 2S1/2") -> "$\\mathrm{5s}^{2} S_{1/2}$"
+ format_ion_label("88Sr+") -> "$^{88}\\mathrm{Sr}^{+}$"\n
+ format_term_symbol("5s 2S1/2") -> "$\\mathrm{5s}^{2} S_{1/2}$"
 """
 
 import re

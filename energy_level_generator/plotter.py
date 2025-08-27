@@ -1,41 +1,34 @@
 # plotter.py
 """
-Energy level plotting utilities:
-- draw_levels: plot level bars, sublevel ticks, and quantum-number labels
-- draw_transitions: plot transitions with optional direction arrows
-- plot_energy_levels: high-level entry point
+Energy level plotting utilities.
+
+Functions:
+ draw_levels: Draws level bars, sublevel ticks, and quantum number labels.
+ draw_transitions: Draws transitions with optional arrows and labels.
+ plot_energy_levels: High-level wrapper to plot levels and transitions with styling.
 """
 
 from __future__ import annotations
-
-# --- stdlib ---
 import math
 import re
 from collections import defaultdict
 from typing import Dict, List
+import matplotlib.pyplot as plt  # type: ignore
 
-# --- third-party ---
-import matplotlib.pyplot as plt  # pylint: disable=import-error
-
-# --- first-party ---
 from energy_level_generator.models import Level
-from energy_level_generator.layout import (
-    compute_x_map,
-    compute_y_map,
-    LayoutConfig,
-    infer_column,
-)
+from energy_level_generator.layout import compute_x_map, compute_y_map, LayoutConfig, infer_column
 from energy_level_generator.style import StyleConfig
 from energy_level_generator.format import format_term_symbol, format_ion_label
 
 
 def _format_sublevel_text(lvl: Level) -> str:
-    """
-    Produce a short sublevel label:
-      - 'red sideband' / 'blue sideband' for sidebands
-      - else prefer lvl.meta['m_f'|'m_j'|'m']
-      - else parse "m_f=..", "m_j=..", or "m=.." from lvl.label
-      - else ''
+    """Return a short text label for a sublevel.
+
+    Priority:
+    1. 'red sideband'/'blue sideband' if sideband.
+    2. Value from lvl.meta for m_f, m_j, or m.
+    3. Parse from lvl.label if contains m_f, m_j, or m=...
+    4. Empty string if none found.
     """
     if getattr(lvl, "split_type", None) == "sideband":
         parts = (lvl.label or "").split(",", 1)
@@ -46,15 +39,13 @@ def _format_sublevel_text(lvl: Level) -> str:
         if nm in meta and meta[nm] is not None:
             return f"{nm}={meta[nm]}"
 
-    mobj = re.search(
-        r"\b(m_f|m_j|m)\s*=\s*([+-]?\d+(?:/\d+)?)", getattr(lvl, "label", "") or ""
-    )
+    mobj = re.search(r"\b(m_f|m_j|m)\s*=\s*([+-]?\d+(?:/\d+)?)", getattr(lvl, "label", "") or "")
     if mobj:
         return f"{mobj.group(1)}={mobj.group(2)}"
     return ""
 
 
-def draw_levels(  # pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements
+def draw_levels(
     ax: plt.Axes,
     levels: List[Level],
     x_map: Dict[str, float],
@@ -62,43 +53,34 @@ def draw_levels(  # pylint: disable=too-many-arguments,too-many-locals,too-many-
     cfg: LayoutConfig,
     style: StyleConfig,
 ) -> None:
-    """Draw base level bars, sublevel ticks, and term-symbol + m labels."""
+    """Draw energy levels and their labels on an axis.
+
+    Draws:
+    - Base level horizontal bars with term symbols.
+    - Sublevel ticks and optional m_j/m_f/m labels.
+    """
     bar_half = cfg.bar_half
+    parent_labels = {lvl.parent.label for lvl in levels if lvl.sublevel > 0 and lvl.parent}
 
-    # parents that have sublevels
-    parent_labels = {
-        lvl.parent.label for lvl in levels if lvl.sublevel > 0 and lvl.parent
-    }
-
-    # base bars and per-level text
+    # Draw base bars and term symbols, sublevel ticks
     for lvl in levels:
         x = x_map[lvl.label]
         y = y_map[lvl.label]
 
         if lvl.sublevel == 0:
+            # Choose style depending on if parent of sublevels
             if lvl.label in parent_labels:
-                color, ls, lw = (
-                    style.parent_bar_color,
-                    style.parent_bar_linestyle,
-                    style.parent_bar_line_width,
-                )
+                color, ls, lw = style.parent_bar_color, style.parent_bar_linestyle, style.parent_bar_line_width
             else:
-                color, ls, lw = (
-                    style.base_bar_color,
-                    style.base_bar_linestyle,
-                    style.line_width,
-                )
+                color, ls, lw = style.base_bar_color, style.base_bar_linestyle, style.line_width
             ax.hlines(y, x - bar_half, x + bar_half, color=color, lw=lw, linestyle=ls)
 
-            # term symbol placement: left for col 0, else right
+            # Term symbol label placement
             col = infer_column(lvl, cfg)
             if col == 0:
-                x_txt = x - bar_half - style.level_label_x_offset
-                ha_txt = "right"
+                x_txt, ha_txt = x - bar_half - style.level_label_x_offset, "right"
             else:
-                x_txt = x + bar_half + style.level_label_x_offset
-                ha_txt = "left"
-
+                x_txt, ha_txt = x + bar_half + style.level_label_x_offset, "left"
             ax.text(
                 x_txt,
                 y + style.level_label_y_offset,
@@ -108,46 +90,41 @@ def draw_levels(  # pylint: disable=too-many-arguments,too-many-locals,too-many-
                 fontfamily="Cambria",
                 fontsize=style.level_label_fontsize,
             )
-
         else:
-            # sublevel tick styling
+            # Sublevel tick style, supports sideband color overrides
             if getattr(lvl, "split_type", None) == "sideband":
                 name = (lvl.label or "").lower()
                 tick_color = (
                     getattr(style, "sideband_blue_color", "blue")
                     if "blue sideband" in name
-                    else (
-                        getattr(style, "sideband_red_color", "red")
-                        if "red sideband" in name
-                        else getattr(style, "sublevel_tick_color", "k")
-                    )
+                    else getattr(style, "sideband_red_color", "red")
+                    if "red sideband" in name
+                    else getattr(style, "sublevel_tick_color", "k")
                 )
                 ls = getattr(style, "sublevel_tick_linestyle", "-")
                 lw = getattr(style, "sublevel_tick_line_width", 1.5)
-                length = getattr(
-                    style,
-                    "sideband_tick_length",
-                    getattr(style, "sublevel_tick_length", 1.0),
-                )
+                length = getattr(style, "sideband_tick_length", getattr(style, "sublevel_tick_length", 1.0))
             else:
                 c_override = (lvl.meta or {}).get("color")
                 if lvl.parent and lvl.parent.label in parent_labels:
-                    tick_color = c_override or style.parent_sublevel_tick_color
-                    ls = style.parent_sublevel_tick_linestyle
-                    lw = style.parent_sublevel_tick_line_width
-                    length = style.parent_sublevel_tick_length
+                    tick_color, ls, lw, length = (
+                        c_override or style.parent_sublevel_tick_color,
+                        style.parent_sublevel_tick_linestyle,
+                        style.parent_sublevel_tick_line_width,
+                        style.parent_sublevel_tick_length,
+                    )
                 else:
-                    tick_color = c_override or style.sublevel_tick_color
-                    ls = style.sublevel_tick_linestyle
-                    lw = style.sublevel_tick_line_width
-                    length = style.sublevel_tick_length
+                    tick_color, ls, lw, length = (
+                        c_override or style.sublevel_tick_color,
+                        style.sublevel_tick_linestyle,
+                        style.sublevel_tick_line_width,
+                        style.sublevel_tick_length,
+                    )
 
             tick_half = bar_half * length
-            ax.hlines(
-                y, x - tick_half, x + tick_half, color=tick_color, lw=lw, linestyle=ls
-            )
+            ax.hlines(y, x - tick_half, x + tick_half, color=tick_color, lw=lw, linestyle=ls)
 
-    # group sublevels by parent
+    # Group sublevels by parent to draw m labels
     subs_by_parent: Dict[str, List[Level]] = defaultdict(list)
     for lvl in levels:
         if lvl.sublevel > 0 and lvl.parent:
@@ -159,7 +136,7 @@ def draw_levels(  # pylint: disable=too-many-arguments,too-many-locals,too-many-
     value_only = bool(getattr(style, "zeeman_label_value_only", True))
 
     def _outward(xval: float, ha: str, delta: float) -> float:
-        """Shift x further away from the bar depending on alignment."""
+        """Shift text outward horizontally relative to alignment."""
         return xval - delta if ha == "right" else xval + delta
 
     for parent_lbl, subs in subs_by_parent.items():
@@ -168,20 +145,14 @@ def draw_levels(  # pylint: disable=too-many-arguments,too-many-locals,too-many-
         col = infer_column(parent, cfg) if parent else 1
 
         if col == 0:
-            x_txt = x0 - bar_half - style.sublevel_label_x_offset
-            ha_txt = "right"
+            x_txt, ha_txt = x0 - bar_half - style.sublevel_label_x_offset, "right"
         else:
-            x_txt = x0 + bar_half + style.sublevel_label_x_offset
-            ha_txt = "left"
+            x_txt, ha_txt = x0 + bar_half + style.sublevel_label_x_offset, "left"
 
-        x_txt_hdr = _outward(
-            x_txt, ha_txt, float(getattr(style, "qnum_header_x_shift", 0.0))
-        )
+        x_txt_hdr = _outward(x_txt, ha_txt, float(getattr(style, "qnum_header_x_shift", 0.0)))
 
-        # non-sideband entries for header inference
+        # Determine header (m_j, m_f, m)
         others = [s for s in subs if getattr(s, "split_type", None) != "sideband"]
-
-        # optional header like "m_j"
         if show_header and others:
             header_name = None
             for s in others:
@@ -203,12 +174,9 @@ def draw_levels(  # pylint: disable=too-many-arguments,too-many-locals,too-many-
                     ha=ha_txt,
                 )
 
-        # value positions
-        x_txt_val = _outward(
-            x_txt, ha_txt, float(getattr(style, "qnum_value_x_shift", 0.0))
-        )
+        x_txt_val = _outward(x_txt, ha_txt, float(getattr(style, "qnum_value_x_shift", 0.0)))
 
-        # draw values
+        # Draw value labels
         for s in subs:
             if getattr(s, "split_type", None) in hide_types:
                 continue
@@ -216,11 +184,7 @@ def draw_levels(  # pylint: disable=too-many-arguments,too-many-locals,too-many-
             txt = _format_sublevel_text(s)
             if not txt:
                 continue
-            if (
-                value_only
-                and getattr(s, "split_type", None) != "sideband"
-                and "=" in txt
-            ):
+            if value_only and getattr(s, "split_type", None) != "sideband" and "=" in txt:
                 txt = txt.split("=", 1)[1].strip()
             ax.text(
                 x_txt_val,
@@ -233,24 +197,24 @@ def draw_levels(  # pylint: disable=too-many-arguments,too-many-locals,too-many-
             )
 
 
-def draw_transitions(  # pylint: disable=too-many-arguments,too-many-locals
+def draw_transitions(
     ax: plt.Axes,
     transitions: List[dict],
     x_map: Dict[str, float],
     y_map: Dict[str, float],
     style: StyleConfig,
 ) -> None:
+    """Draw transitions as lines with optional arrow and label.
+
+    If reversible=True: simple line.
+    If reversible=False: add arrow at midpoint.
+    Supports multiple transitions between same levels with offset.
     """
-    Draw transitions:
-      • reversible=True  → plain line
-      • reversible=False → line + single arrow marker at midpoint
-    """
-    # group identical pairs for offsetting
     pairs = defaultdict(list)
     for i, tdef in enumerate(transitions):
         pairs[(tdef["from"], tdef["to"])].append(i)
 
-    # centered slot indices
+    # Determine offset slots for overlapping transitions
     slots: Dict[int, tuple[float, int]] = {}
     for idxs in pairs.values():
         n = len(idxs)
@@ -260,7 +224,6 @@ def draw_transitions(  # pylint: disable=too-many-arguments,too-many-locals
     for i, tdef in enumerate(transitions):
         x1, y1 = x_map[tdef["from"]], y_map[tdef["from"]]
         x2, y2 = x_map[tdef["to"]], y_map[tdef["to"]]
-
         dx, dy = x2 - x1, y2 - y1
         seg_len = math.hypot(dx, dy)
         if seg_len == 0:
@@ -278,48 +241,31 @@ def draw_transitions(  # pylint: disable=too-many-arguments,too-many-locals
         label = tdef.get("label", "")
         reversible = tdef.get("reversible", True)
 
-        # base line
-        ax.plot(
-            [x1, x2],
-            [y1, y2],
-            linestyle=ls,
-            color=color,
-            lw=style.transition_line_width,
-            solid_capstyle="butt",
-            label=label,
-        )
+        # Base transition line
+        ax.plot([x1, x2], [y1, y2], linestyle=ls, color=color, lw=style.transition_line_width,
+                solid_capstyle="butt", label=label)
 
         if not reversible:
-            # arrow at midpoint via annotate()
+            # Arrow marker at midpoint
             mx, my = (x1 + x2) / 2, (y1 + y2) / 2
             arrow_len = getattr(style, "transition_arrow_length", delta * 2) / 2
             tail = (mx - ux * arrow_len, my - uy * arrow_len)
             tip = (mx + ux * arrow_len, my + uy * arrow_len)
-            ax.annotate(
-                "",
-                xy=tip,
-                xytext=tail,
-                arrowprops={
-                    "arrowstyle": style.transition_arrowstyle,
-                    "mutation_scale": style.transition_mutation_scale,
-                    "color": color,
-                    "linewidth": style.transition_arrow_line_width,
-                },
-            )
+            ax.annotate("", xy=tip, xytext=tail,
+                        arrowprops={"arrowstyle": style.transition_arrowstyle,
+                                    "mutation_scale": style.transition_mutation_scale,
+                                    "color": color,
+                                    "linewidth": style.transition_arrow_line_width})
 
         if tdef.get("show_label", False):
+            # Draw transition label offset perpendicular to the line
             mx, my = (x1 + x2) / 2, (y1 + y2) / 2
             px, py = -uy, ux
-            ax.text(
-                mx + px * style.transition_label_shift,
-                my + py * style.transition_label_shift,
-                label,
-                va="center",
-                ha="center",
-                fontsize=style.transition_label_fontsize,
-                fontfamily="Cambria",
-                color=color,
-            )
+            ax.text(mx + px * style.transition_label_shift,
+                    my + py * style.transition_label_shift,
+                    label, va="center", ha="center",
+                    fontsize=style.transition_label_fontsize,
+                    fontfamily="Cambria", color=color)
 
 
 def plot_energy_levels(
@@ -332,21 +278,22 @@ def plot_energy_levels(
     ylabel_pad: int = 15,
     left_margin: float = 0.2,
 ) -> None:
-    """High-level: compute layout, draw levels/transitions, style axes."""
+    """High-level plot routine for energy levels and transitions.
+
+    Computes layout, draws levels and transitions, and styles the axes.
+    """
     levels = data["levels"]
     transitions = data.get("transitions", [])
 
     y_map = compute_y_map(levels, layout_cfg)
     x_map = compute_x_map(levels, layout_cfg)
 
-    fig, ax = plt.subplots(figsize=figsize)  # type: ignore[call-arg]
+    fig, ax = plt.subplots(figsize=figsize)  # type: ignore
 
     draw_levels(ax, levels, x_map, y_map, layout_cfg, style_cfg)
     draw_transitions(ax, transitions, x_map, y_map, style_cfg)
 
-    ax.legend(
-        loc=style_cfg.legend_loc, fontsize=style_cfg.legend_fontsize, frameon=False
-    )
+    ax.legend(loc=style_cfg.legend_loc, fontsize=style_cfg.legend_fontsize, frameon=False)
 
     ion_label = format_ion_label(data.get("ion", ""))
     title_text = data.get("title", "")
@@ -354,6 +301,7 @@ def plot_energy_levels(
     ax.set_ylabel(f"Energy ({data.get('unit', 'cm$^{-1}$')})", labelpad=ylabel_pad)
     ax.set_xticks([])
 
+    # Configure axis visibility
     if show_axis:
         for side in ["top", "right", "bottom"]:
             ax.spines[side].set_visible(False)
@@ -363,8 +311,7 @@ def plot_energy_levels(
         ax.axis("off")
 
     spacing = layout_cfg.spacing
-    yvals = list(y_map.values())
-    xvals = list(x_map.values())
+    yvals, xvals = list(y_map.values()), list(x_map.values())
     ax.set_ylim(min(yvals) - 100 * spacing, max(yvals) + spacing)
     ax.set_xlim(min(xvals) - spacing / 2, max(xvals) + spacing / 2)
 
