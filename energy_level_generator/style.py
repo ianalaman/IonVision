@@ -123,3 +123,33 @@ class StyleConfig:
 
     F_legend: bool = True
     """Whether to include an F-legend when hyperfine is present."""
+
+    # Header / value shifts (data units, applied by _outward)
+    qnum_header_x_shift: float = 0.0
+    qnum_value_x_shift: float = 0.0
+
+    # Quantum-number label toggles
+    show_qnum_header: bool = True
+    zeeman_label_value_only: bool = True
+
+    # Fonts/colors for sublevel values
+    sublevel_value_fontfamily: str = "DejaVu Sans Mono"
+
+    # Optional sideband overrides
+    sideband_blue_color: str = "blue"
+    sideband_red_color: str = "red"
+    sideband_tick_length: float = 0.6  # fraction of bar_half
+# ↑ END OF CLASS --------------------------------------------------------------
+
+
+def default_style() -> StyleConfig:
+    """Return a StyleConfig with sensible project defaults."""
+    s = StyleConfig()
+    # your custom defaults
+    s.hide_split_types = {"sideband"}
+    s.show_qnum_header = True
+    s.zeeman_label_value_only = True
+    s.qnum_header_x_shift = 0.045
+    s.qnum_value_x_shift = 0.00
+    s.sublevel_value_fontfamily = "DejaVu Sans Mono"
+    return s

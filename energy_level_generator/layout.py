@@ -158,6 +158,32 @@ class LayoutConfig:
     sublevel_uniform_centered: bool = True
     sideband_vertical_offset: float = 350.0
 
+def default_layout() -> LayoutConfig:
+    """
+    Sensible defaults for 88Sr+ S/P/D columns used in your plots.
+    - Two P columns (J=1/2 and 3/2) share the same x-position index (1),
+      and two D columns (J=3/2 and 5/2) share index (2). The renderer
+      will still separate them using the letter list and spacing.
+    """
+    # Bucket energies in 10,000 cm^-1 bands; adjust if you use other units
+    def _bucket_10k(level) -> int:
+        try:
+            return int(level.energy // 10_000)
+        except Exception:
+            return 0
+
+    return LayoutConfig(
+        column_letters=["S1/2", "P1/2", "P3/2", "D3/2", "D5/2"],
+        column_positions=[0,       0,      1,      2,      2],
+        spacing=1.0,           # horizontal spacing between unique indices
+        bar_half=0.30,         # half-width of each horizontal energy bar (data units)
+        x_jitter=0.25,         # tiny random x offset to prevent perfect overlaps
+        y_jitter=100.0,        # tiny random y offset to prevent perfect overlaps
+        energy_group_key=_bucket_10k,
+        energy_group_y_scale=30.0,  # vertical separation between energy groups
+        sublevel_uniform_spacing=1000.0,  # Zeeman/HFS tick spacing (data units)
+        sublevel_uniform_centered=True,
+    )
 
 
 def infer_column(level: Level, cfg: LayoutConfig) -> int:
@@ -440,3 +466,5 @@ def compute_sublevel_y_map(
             sub_y[lvl.label] = parent_y + delta + extra
 
     return sub_y
+
+__all__ = ["LayoutConfig", "default_layout"]
