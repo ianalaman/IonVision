@@ -1,63 +1,125 @@
 # style.py
 """
-Styling configuration for energy level diagrams.
+Styling configuration for energy-level diagrams.
 """
+
 from dataclasses import dataclass, field
 from typing import Mapping, Optional, Set
 
 @dataclass
 class StyleConfig:
-    # ─── Base‐level bar styling ────────────────────────────────────────────────
+    """Collection of style knobs used by the plotter."""
+
+    # ── Base-level bars ───────────────────────────────────────────────────────
     base_bar_color: str = "k"
+    """Color for base level bars."""
+
     base_bar_linestyle: str = "solid"
+    """Linestyle for base level bars."""
+
     zeeman_bar_color: str = "black"
+    """Color for bars drawn on Zeeman parents (if used)."""
 
-    # ─── Parent‐level bar overrides ────────────────────────────────────────────
+    # ── Parent-level overrides ────────────────────────────────────────────────
     parent_bar_color: str = "#7B7B7B"
+    """Color for parent bars that have sublevels."""
+
     parent_bar_linestyle: str = "dotted"
+    """Linestyle for parent bars."""
+
     parent_bar_line_width: float = 1.0
+    """Line width for parent bars."""
 
-    # ─── Sub‐level tick styling ────────────────────────────────────────────────
+    # ── Sublevel ticks ────────────────────────────────────────────────────────
     sublevel_tick_color: str = "red"
+    """Tick color for sublevels."""
+
     sublevel_tick_linestyle: str = "solid"
+    """Tick linestyle for sublevels."""
+
     sublevel_tick_line_width: float = 1.0
-    sublevel_tick_length: float = 0.3  # fraction of bar_half
+    """Tick line width for sublevels."""
 
-    # ─── Parent‐sublevel tick overrides ────────────────────────────────────────
+    sublevel_tick_length: float = 0.3
+    """Tick half-length as a fraction of `bar_half`."""
+
+    # ── Parent-sublevel tick overrides ────────────────────────────────────────
     parent_sublevel_tick_color: str = "black"
+    """Tick color for sublevels of a parent with children."""
+
     parent_sublevel_tick_linestyle: str = "solid"
+    """Tick linestyle for sublevels of a parent with children."""
+
     parent_sublevel_tick_line_width: float = 1.0
+    """Tick line width for sublevels of a parent with children."""
+
     parent_sublevel_tick_length: float = 0.30
+    """Tick half-length for sublevels of a parent with children."""
 
-    # ─── Energy‐level text styling ─────────────────────────────────────────────
-    level_label_x_offset: float = 0.4  # in data‐units (added to bar_half)
+    # ── Level text ────────────────────────────────────────────────────────────
+    level_label_x_offset: float = 0.4
+    """Extra x-offset from bar end (data units)."""
+
     level_label_y_offset: float = 0.0
+    """Vertical offset for level labels (data units)."""
+
     level_label_fontsize: float = 15.0
+    """Font size for level labels."""
 
-    # ─── Sub‐level “m=” text styling ───────────────────────────────────────────
+    # ── Sublevel text ─────────────────────────────────────────────────────────
     sublevel_label_x_offset: float = 0.15
-    sublevel_label_y_offset: float = 5.0          # keep ONE definition
-    sublevel_label_y_spacing: float = 900.0       # vertical gap between stacked labels
+    """Extra x-offset for sublevel labels."""
+
+    sublevel_label_y_offset: float = 5.0
+    """Vertical offset for each sublevel label (data units)."""
+
+    sublevel_label_y_spacing: float = 900.0
+    """Extra vertical gap between stacked sublevel labels."""
+
     sublevel_label_fontsize: float = 9.0
+    """Font size for sublevel labels."""
 
-    # ─── Transition line & arrow styling ──────────────────────────────────────
+    # ── Transitions ───────────────────────────────────────────────────────────
     transition_line_width: float = 1.0
+    """Line width for transition segments."""
+
     transition_arrow_line_width: float = 1.0
-    transition_arrowstyle: str = "-|>"            # "->" for simple head
+    """Line width for transition arrows."""
+
+    transition_arrowstyle: str = "-|>"
+    """Matplotlib arrowstyle for one-way transitions."""
+
     transition_mutation_scale: float = 10.0
-    transition_offset: float = 0.025              # offset for arrows from line
+    """Arrow head size (Matplotlib mutation scale)."""
 
-    # ─── Transition‐label styling ─────────────────────────────────────────────
-    transition_label_shift: float = 0.35          # perp‐distance from line
+    transition_offset: float = 0.025
+    """Normal offset for stacked parallel transitions."""
+
+    # ── Transition labels ─────────────────────────────────────────────────────
+    transition_label_shift: float = 0.35
+    """Perpendicular distance from the transition line for labels."""
+
     transition_label_fontsize: float = 15.0
+    """Font size for transition labels."""
 
-    # ─── Global fallback ───────────────────────────────────────────────────────
+    # ── Global / legend ───────────────────────────────────────────────────────
     line_width: float = 0.5
-    tick_size: float = 0.3
-    cmap_sublevels: Optional[Mapping[int, str]] = None
-    legend_fontsize: float = 10.0
-    legend_loc: str = "lower right"
+    """Fallback line width."""
 
-    # Use default_factory for mutables
-    hide_split_types: Set[str] = field(default_factory=set)   # e.g., {"sideband"}
+    tick_size: float = 0.3
+    """Fallback tick size."""
+
+    cmap_sublevels: Optional[Mapping[int, str]] = None
+    """Optional mapping `m → color` to color-code sublevels."""
+
+    legend_fontsize: float = 10.0
+    """Legend font size."""
+
+    legend_loc: str = "lower right"
+    """Legend location string."""
+
+    hide_split_types: Set[str] = field(default_factory=set)
+    """Split types to hide in labels/ticks (e.g., `{'sideband'}`)."""
+
     F_legend: bool = True
+    """Whether to include an F-legend when hyperfine is present."""
