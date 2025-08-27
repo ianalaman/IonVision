@@ -305,6 +305,7 @@ def plot_energy_levels(
     title_pad: int = 20,
     ylabel_pad: int = 15,
     left_margin: float = 0.2,
+    return_fig: bool = False,
 ) -> None:
     """High-level plot routine for energy levels and transitions.
 
@@ -345,4 +346,7 @@ def plot_energy_levels(
 
     fig.subplots_adjust(left=left_margin, bottom=0.15)
     fig.tight_layout()
-    plt.show()
+    if return_fig:
+        return fig
+    else:
+        plt.show()
