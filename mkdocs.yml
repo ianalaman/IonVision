@@ -27,11 +27,8 @@ nav:
       - Custom Pulse Sequences: how-to/custom_sequences.md
       - Extending Energy Level Models: how-to/extending_models.md
   - NQCC Ion Traps:
-      - Sr88 SPAM & Sideband Cooling: notebooks/02_sr88.md
-      - Ca+ SPAM & Sideband Cooling: notebooks/03_ca.md
-  - Reference:
-      - Parameters & Config Options: reference/config.md
-      - Sequence Syntax: reference/sequences.md
+      - Sr88 Energy Level Example: notebooks/energy_level_generator_Sr.ipynb
+      - Ca+ SEnergy Level Example: notebooks/03_ca.md
   - Why create this toolkit?:
       - Background: explanation/background.md
       - Design Choices: explanation/design.md
@@ -72,8 +69,11 @@ plugins:
               - "!^__"
             inherited_members: false
             merge_init_into_class: true
+            show_root_full_path: true
             separate_signature: true
             show_source: true
+  - mkdocs-jupyter
+
 
 markdown_extensions:
   - admonition
