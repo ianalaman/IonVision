@@ -22,14 +22,7 @@ from energy_level_generator.format import format_term_symbol, format_ion_label
 
 
 def _format_sublevel_text(lvl: Level) -> str:
-    """Return a short text label for a sublevel.
-
-    Priority:
-    1. 'red sideband'/'blue sideband' if sideband.
-    2. Value from lvl.meta for m_f, m_j, or m.
-    3. Parse from lvl.label if contains m_f, m_j, or m=...
-    4. Empty string if none found.
-    """
+    """Return a short text label for a sublevel with proper subscripts."""
     if getattr(lvl, "split_type", None) == "sideband":
         parts = (lvl.label or "").split(",", 1)
         return parts[1].strip() if len(parts) > 1 else "sideband"
@@ -37,13 +30,17 @@ def _format_sublevel_text(lvl: Level) -> str:
     meta = getattr(lvl, "meta", {}) or {}
     for nm in ("m_f", "m_j", "m"):
         if nm in meta and meta[nm] is not None:
-            return f"{nm}={meta[nm]}"
+            if nm in ("m_j", "m_f"):
+                return f"$m_{{{nm[-1]}}}={meta[nm]}$"  # LaTeX-style subscript
+            return f"${nm}={meta[nm]}$"
 
     mobj = re.search(r"\b(m_f|m_j|m)\s*=\s*([+-]?\d+(?:/\d+)?)", getattr(lvl, "label", "") or "")
     if mobj:
-        return f"{mobj.group(1)}={mobj.group(2)}"
+        nm, val = mobj.group(1), mobj.group(2)
+        if nm in ("m_j", "m_f"):
+            return f"$m_{{{nm[-1]}}}={val}$"
+        return f"${nm}={val}$"
     return ""
-
 
 def draw_levels(
     ax: plt.Axes,
@@ -62,20 +59,18 @@ def draw_levels(
     bar_half = cfg.bar_half
     parent_labels = {lvl.parent.label for lvl in levels if lvl.sublevel > 0 and lvl.parent}
 
-    # Draw base bars and term symbols, sublevel ticks
+    # --- base bars, term symbols, and sublevel ticks ---
     for lvl in levels:
         x = x_map[lvl.label]
         y = y_map[lvl.label]
 
         if lvl.sublevel == 0:
-            # Choose style depending on if parent of sublevels
             if lvl.label in parent_labels:
                 color, ls, lw = style.parent_bar_color, style.parent_bar_linestyle, style.parent_bar_line_width
             else:
                 color, ls, lw = style.base_bar_color, style.base_bar_linestyle, style.line_width
             ax.hlines(y, x - bar_half, x + bar_half, color=color, lw=lw, linestyle=ls)
 
-            # Term symbol label placement
             col = infer_column(lvl, cfg)
             if col == 0:
                 x_txt, ha_txt = x - bar_half - style.level_label_x_offset, "right"
@@ -91,7 +86,6 @@ def draw_levels(
                 fontsize=style.level_label_fontsize,
             )
         else:
-            # Sublevel tick style, supports sideband color overrides
             if getattr(lvl, "split_type", None) == "sideband":
                 name = (lvl.label or "").lower()
                 tick_color = (
@@ -120,11 +114,10 @@ def draw_levels(
                         style.sublevel_tick_line_width,
                         style.sublevel_tick_length,
                     )
-
             tick_half = bar_half * length
             ax.hlines(y, x - tick_half, x + tick_half, color=tick_color, lw=lw, linestyle=ls)
 
-    # Group sublevels by parent to draw m labels
+    # --- prep for labels ---
     subs_by_parent: Dict[str, List[Level]] = defaultdict(list)
     for lvl in levels:
         if lvl.sublevel > 0 and lvl.parent:
@@ -136,9 +129,9 @@ def draw_levels(
     value_only = bool(getattr(style, "zeeman_label_value_only", True))
 
     def _outward(xval: float, ha: str, delta: float) -> float:
-        """Shift text outward horizontally relative to alignment."""
         return xval - delta if ha == "right" else xval + delta
 
+    # --- per parent: header + values ---
     for parent_lbl, subs in subs_by_parent.items():
         x0 = x_map[parent_lbl]
         parent = next((lvl for lvl in levels if lvl.label == parent_lbl), None)
@@ -149,34 +142,62 @@ def draw_levels(
         else:
             x_txt, ha_txt = x0 + bar_half + style.sublevel_label_x_offset, "left"
 
-        x_txt_hdr = _outward(x_txt, ha_txt, float(getattr(style, "qnum_header_x_shift", 0.0)))
+        # numeric column x-position
+        x_txt_val = _outward(
+            x_txt, 
+            ha_txt, 
+            float(getattr(style, "qnum_value_x_shift", 0.0))  # shift for numbers
+        )
 
-        # Determine header (m_j, m_f, m)
+        # header x-position (separate configurable shift)
+        x_txt_hdr = _outward(
+            x_txt, 
+            ha_txt, 
+            float(getattr(style, "qnum_header_x_shift", 0.0))  # shift for header
+        )
+
+
+        # header (m_j, m_f, m) — flush-aligned with numbers
         others = [s for s in subs if getattr(s, "split_type", None) != "sideband"]
         if show_header and others:
             header_name = None
             for s in others:
-                t = _format_sublevel_text(s) or ""
-                mobj = re.match(r"^\s*(m_j|m_f|m)\s*=", t)
+                meta = getattr(s, "meta", {}) or {}
+                for nm in ("m_j", "m_f", "m"):
+                    if nm in meta and meta[nm] is not None:
+                        header_name = nm
+                        break
+                if header_name:
+                    break
+                raw = getattr(s, "label", "") or ""
+                mobj = re.search(r"\b(m_j|m_f|m)\s*=", raw)
                 if mobj:
                     header_name = mobj.group(1)
                     break
+                t = _format_sublevel_text(s) or ""
+                mobj = re.search(r"m_\{([jf])\}", t)
+                if mobj:
+                    header_name = f"m_{mobj.group(1)}"
+                    break
+                if re.search(r"\bm\b", t):
+                    header_name = "m"
+                    break
+
             if header_name:
                 y_top = max(y_map[s.label] for s in others)
                 y_hdr = y_top + pad_factor * cfg.sublevel_uniform_spacing
+                header_display = f"$m_{{{header_name[-1]}}}$" if header_name in ("m_j", "m_f") else "$m$"
                 ax.text(
                     x_txt_hdr,
                     y_hdr,
-                    header_name,
+                    header_display,
                     fontfamily="Cambria",
                     fontsize=style.sublevel_label_fontsize,
                     va="bottom",
-                    ha=ha_txt,
+                    ha=ha_txt,  # same alignment as numbers
                 )
 
-        x_txt_val = _outward(x_txt, ha_txt, float(getattr(style, "qnum_value_x_shift", 0.0)))
-
-        # Draw value labels
+        # value labels
         for s in subs:
             if getattr(s, "split_type", None) in hide_types:
                 continue
@@ -184,8 +205,15 @@ def draw_levels(
             txt = _format_sublevel_text(s)
             if not txt:
                 continue
-            if value_only and getattr(s, "split_type", None) != "sideband" and "=" in txt:
-                txt = txt.split("=", 1)[1].strip()
+
+            if value_only and getattr(s, "split_type", None) != "sideband":
+                # unwrap $...$, drop "m_j=" part, and avoid dangling $
+                is_math = txt.startswith("$") and txt.endswith("$")
+                inner = txt[1:-1] if is_math else txt
+                if "=" in inner:
+                    inner = inner.split("=", 1)[1].strip()
+                txt = f"${inner}$" if is_math else inner
+
             ax.text(
                 x_txt_val,
                 y_txt,
