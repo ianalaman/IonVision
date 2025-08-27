@@ -4,10 +4,10 @@ Matplotlib-based static plotting of pulse sequences.
 """
 import matplotlib.pyplot as plt
 from typing import Optional, List, Tuple, Dict
-from config import DEFAULT_CHANNEL_ORDER, DEFAULT_COLORS
-from utils import draw_pulses, draw_baselines, draw_separators, draw_time_axis
+from pulse_sequence_generator.config import DEFAULT_CHANNEL_ORDER, DEFAULT_COLORS
+from pulse_sequence_generator.utils import draw_pulses, draw_baselines, draw_separators, draw_time_axis
 import matplotlib as mpl
-from config import RC_PARAMS
+from pulse_sequence_generator.config import RC_PARAMS
 
 # apply once, globally
 mpl.rcParams.update(RC_PARAMS)
@@ -21,29 +21,25 @@ def plot_matplotlib(
     ax: Optional[plt.Axes] = None,
     labels: Optional[List[str]] = None,
 ) -> Tuple[plt.Figure, plt.Axes]:
-    """
-    Draw a static pulse sequence with Matplotlib.
+    """Draw a static pulse sequence with Matplotlib.
 
-    Parameters
-    ----------
-    seq : Sequence
-        The pulse sequence to plot.
-    channel_order : list of str, optional
-        Order of channels from top to bottom. Defaults to config.
-    colors : dict, optional
-        Mapping channel->color. Defaults to config.
-    xlim : (float, float), optional
-        X-axis limits. Defaults to full data range.
-    ax : matplotlib.axes.Axes, optional
-        Existing axes to draw onto. If None, a new figure/axes is created.
-    labels : list of str, optional
-        Text labels for each region between boundaries.
+    Args:
+        seq: Pulse sequence to plot.
+        channel_order: Channel order (top → bottom). Defaults to config.
+        colors: Mapping ``channel -> color``. Defaults to config.
+        xlim: X-axis limits; default is full data extent.
+        ax: Existing axes to draw onto. If ``None``, a new figure/axes is created.
+        labels: Text labels for each region between separators.
 
-    Returns
-    -------
-    fig, ax : Matplotlib Figure and Axes objects.
+    Returns:
+        tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]: Figure and axes.
+
+    ??? example "Quick example"
+        ```python
+        fig, ax = plot_matplotlib(seq)  # uses defaults from config
+        ```
     """
-    from core import Sequence
+    from pulse_sequence_generator.core import Sequence
     if channel_order is None:
         channel_order = DEFAULT_CHANNEL_ORDER
     if colors is None:
