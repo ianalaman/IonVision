@@ -19,26 +19,16 @@ into **publication-ready diagrams**.
 
 - **Pulse-sequence timelines**  
   Render SPAM, Doppler, sideband cooling, and custom control sequences with
-  labelled channels and stage markers.
+  labelled hardware channels and time stage markers.
 
 - **Reproducible, shareable outputs**  
   Export static PNGs aligned with NQCC colours for papers, talks, and lab notes.
 
 !!! tip "Who is this for?"
-    Experimental ion-trap physicists, students learning the workflow, and anyone who
-    needs **clear, consistent diagrams** for trapped-ion control.
 
----
+    Experimental ion-trap physicists writing reports, students learning about pulse sequences, and anyone who needs **clear, consistent diagrams** for trapped-ion control.
 
-## Quickstart (2 minutes)
 
-1. **Install**
-   ```bash
-   pip install ion-trap-diagram-generator```
- 2. **Open the quickstart**  
-   See **Getting Started → [Installation & Quickstart](notebooks/01_quickstart.md)** for a minimal example that produces:
-   - one energy-level diagram
-   - one pulse-sequence timeline
 
 ---
 
@@ -46,14 +36,15 @@ into **publication-ready diagrams**.
 
 Two small libraries power everything:
 
-- **Energy Level Generator** (`energy_level_generator/`) — types + layout utilities to position levels and annotate transitions.
-- **Pulse Sequence Generator** (`pulse_sequence_generator/`) — channel/pulse model, plotting, and helpers for timelines.
+- **Energy Level Generator** (`energy_level_generator/`) — Set of tools to display energy levels neatly and add labels and arrows to show transitions between them.
+- **Pulse Sequence Generator** (`pulse_sequence_generator/`) — Set of tools to display pulse sequence diagrams neatly and with configurable timings and apparatus control lanes.
 
-You describe an experiment in a **simple schema** (Python dict/JSON). The reference pages list **every field, unit, and default**.
+In both cases you describe the diagram using a **simple schema** (Python dict/JSON). The reference pages list **every field, unit, and default**.
 
 | Concept        | You specify                                  | Output                              |
 |----------------|----------------------------------------------|-------------------------------------|
 | *Level*        | `label`, `energy`, (optional) width/group    | horizontal bars grouped by manifold |
+|                |                                              |                                     |  
 | *Transition*   | source → target, wavelength/freq, `label`    | arrows with labels                  |
 | *Channel*      | name (e.g. “422 nm”), colour, lane order     | timeline lanes                      |
 | *Pulse*        | `t0`, `dt`, `channel`, `label`               | rectangles on the lane              |
