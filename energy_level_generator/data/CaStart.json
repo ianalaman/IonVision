@@ -1,0 +1,20 @@
+{
+  "title": "Cooling & Repump Scheme (43Ca+)",
+  "ion": "43Ca+",
+  "unit": "cm$^{-1}$",
+  "levels": [
+    { "label": "4s  2S1/2", "energy": 0.0,        "zeeman": true },
+    { "label": "3d  2D3/2", "energy": 13641.573,  "zeeman": true },
+    { "label": "3d  2D5/2", "energy": 13735.691,  "zeeman": true },
+    { "label": "4p  2P1/2", "energy": 25188.917,  "zeeman": true },
+    { "label": "4p  2P3/2", "energy": 25445.293,  "zeeman": true }
+  ],
+  "transitions": [
+    { "from": "4s  2S1/2", "to": "4p  2P1/2", "label": "397 nm", "color": "blue", "style": "solid", "reversible": true },
+    { "from": "4s  2S1/2", "to": "4p  2P3/2", "label": "393 nm", "color": "blue", "style": "solid", "reversible": true },
+    { "from": "3d  2D3/2", "to": "4p  2P1/2", "label": "866 nm", "color": "red",  "style": "solid", "reversible": true },
+    { "from": "3d  2D3/2", "to": "4p  2P3/2", "label": "850 nm", "color": "red",  "style": "solid", "reversible": true },
+    { "from": "3d  2D5/2", "to": "4p  2P3/2", "label": "854 nm", "color": "red",  "style": "solid", "reversible": true }
+  ]
+}
+

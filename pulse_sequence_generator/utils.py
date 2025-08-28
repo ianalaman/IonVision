@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 from typing import List
 
-from core import Sequence
-from config import (
+from pulse_sequence_generator.core import Sequence
+from pulse_sequence_generator.config import (
     BASELINE_HEIGHT,
     SEPARATOR_STYLE,
     TIME_AXIS_PROPS,
