@@ -1,3 +1,7 @@
-﻿## Installation & Quickstart
+﻿1. **Install**
+   ```bash
+   pip install ion-vision```
 
-Instructions for pip install and a minimal example.
+> **ℹ️ Note:**  
+> **Not yet publicly available; licensing arrangements with STFC are underway.**
+
