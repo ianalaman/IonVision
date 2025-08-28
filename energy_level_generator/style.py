@@ -138,7 +138,7 @@ class StyleConfig:
     # Optional sideband overrides
     sideband_blue_color: str = "blue"
     sideband_red_color: str = "red"
-    sideband_tick_length: float = 0.6  # fraction of bar_half
+    sideband_tick_length: float = 0.3  # fraction of bar_half
 # ↑ END OF CLASS --------------------------------------------------------------
 
 
