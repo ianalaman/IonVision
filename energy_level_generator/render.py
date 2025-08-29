@@ -6,10 +6,107 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Optional
 from pathlib import Path
+
+from matplotlib.pyplot import title
+from .splitters import ZeemanSplitter, SidebandSplitter
 from .models import Level
 from .plotter import plot_energy_levels
 from .style import StyleConfig, default_style
 from .layout import LayoutConfig, default_layout
+
+# ---- Helpers to rebuild non-JSON types --------------------------------------
+def _build_energy_group_key(spec: Optional[dict]) -> Callable:
+    """
+    Recreate a callable from a small JSON spec.
+    Supported forms:
+      {"kind": "floor_div", "divisor": 10000}
+    """
+    if not isinstance(spec, dict):
+        # default: floor by 10 (matches your class default comment),
+        # but you'll likely override via your JSON.
+        return lambda lvl: int(lvl.energy // 10)
+
+    kind = spec.get("kind", "floor_div")
+    if kind == "floor_div":
+        divisor = spec.get("divisor", 10000)
+        if not isinstance(divisor, (int, float)) or divisor == 0:
+            raise ValueError("energy_group_key.floor_div requires a non-zero numeric 'divisor'.")
+        return (lambda div: (lambda lvl: int(lvl.energy // div)))(divisor)
+
+    raise ValueError(f"Unsupported energy_group_key.kind: {kind!r}")
+
+
+def _normalize_cmap_sublevels(obj) -> Optional[Mapping[int, str]]:
+    if obj is None:
+        return None
+    if not isinstance(obj, dict):
+        raise TypeError("cmap_sublevels must be a mapping of int->str (as JSON object).")
+    out = {}
+    for k, v in obj.items():
+        try:
+            ik = int(k)
+        except Exception as e:
+            raise TypeError(f"cmap_sublevels keys must be integers (got {k!r}).") from e
+        if not isinstance(v, str):
+            raise TypeError(f"cmap_sublevels[{ik}] must be a color string.")
+        out[ik] = v
+    return out
+
+
+def _to_set(seq) -> Set[str]:
+    if seq is None:
+        return set()
+    if isinstance(seq, set):
+        return seq
+    if not isinstance(seq, (list, tuple)):
+        raise TypeError("hide_split_types must be a list of strings.")
+    return set(map(str, seq))
+
+
+# ---- Main loader ------------------------------------------------------------
+def json_breaker(src: Union[str, Path, dict]) -> Tuple[LayoutConfig, StyleConfig]:
+    """
+    Load JSON (path, str path, or dict), split into Layout and Style configs,
+    rebuild non-JSON types, and return (layout_cfg, style_cfg).
+    """
+    if isinstance(src, (str, Path)):
+        with open(src, "r", encoding="utf-8") as f:
+            config = json.load(f)
+    elif isinstance(src, dict):
+        config = src
+    else:
+        raise TypeError("src must be a dict or a path-like string/Path to a JSON file.")
+
+    layout_in = dict(config.get("layout", {}))
+    style_in = dict(config.get("style", {}))
+
+    # ---- Layout
+    if "column_letters" not in layout_in or "column_positions" not in layout_in:
+        raise ValueError("layout.column_letters and layout.column_positions are required.")
+
+    # Build energy_group_key callable then remove raw spec before dataclass init
+    egk_spec = layout_in.pop("energy_group_key", None)
+    energy_group_key = _build_energy_group_key(egk_spec)
+
+    layout_cfg = LayoutConfig(
+        column_letters=layout_in.pop("column_letters"),
+        column_positions=layout_in.pop("column_positions"),
+        energy_group_key=energy_group_key,
+        **layout_in,  # remaining optional fields
+    )
+
+    # ---- Style
+    # Convert JSON forms to Python forms
+    if "hide_split_types" in style_in:
+        style_in["hide_split_types"] = _to_set(style_in["hide_split_types"])
+    if "cmap_sublevels" in style_in:
+        style_in["cmap_sublevels"] = _normalize_cmap_sublevels(style_in["cmap_sublevels"])
+
+    style_cfg = StyleConfig(**style_in)
+
+    return layout_cfg, style_cfg
+
+
 
 
 def _sanitize(obj: Any) -> Any:
@@ -46,7 +143,14 @@ def dump_levels(levels: Iterable[Level], sort: bool=True, n:int=10) -> None:
         items.sort(key=lambda l: (getattr(l, "energy", 0.0), getattr(l, "label", "")))
     for row in [_level_to_shallow_dict(x) for x in items[:n]]:
         print(row)
-def load_and_split(path: Path, *, b_tesla: float, sideband_gap: float, attach_to_zeeman: bool) -> dict:
+
+def load_and_split(
+        path: Path,
+        *,
+        b_tesla: float = 0.01,
+        sideband_gap: float = 10.0,
+        attach_sidebands_to_zeeman: bool = True
+    ) -> dict:
     """Return a `data` dict ready for `plot_energy_levels`."""
     raw = json.loads(path.read_text(encoding="utf-8"))
     levels = [Level(**entry) for entry in raw["levels"]]
@@ -68,46 +172,15 @@ def load_and_split(path: Path, *, b_tesla: float, sideband_gap: float, attach_to
         zkids = zs.split(lvl) if b_tesla > 0 else []
         split_levels.extend(zkids)
         if sideband_gap > 0:
-            split_levels.extend(sb.split(lvl, zeeman_children=zkids) if attach_to_zeeman else sb.split(lvl))
+            split_levels.extend(sb.split(lvl, zeeman_children=zkids) if attach_sidebands_to_zeeman else sb.split(lvl))
     data["levels"] = split_levels
     return data
 
+def generate_energy_levels(energy_json_path, style_json_path):
 
-def default_layout() -> LayoutConfig:
-    return LayoutConfig(
-        column_letters=["S1/2", "P1/2", "P3/2", "D3/2", "D5/2"],
-        column_positions=[0, 0, 1, 2, 2],
-        spacing=1.0,
-        bar_half=0.30,
-        x_jitter=0.25,
-        y_jitter=100.0,
-        energy_group_key=lambda lvl: int(lvl.energy // 10000),
-        energy_group_y_scale=30.0,
-        sublevel_uniform_spacing=1000.0,
-        sublevel_uniform_centered=True,
-    )
-
-def default_style() -> StyleConfig:
-    s = StyleConfig()
-    s.hide_split_types = {"sideband"}  # Hides sideband labels
-    s.show_qnum_header = True
-    s.qnum_header_pad_factor = 0.30
-    s.zeeman_label_value_only = True
-    s.qnum_header_x_shift = 0.045
-    s.qnum_value_x_shift = 0.00
-    s.sublevel_value_fontfamily = "DejaVu Sans Mono"
-    # s.hide_split_types = {"sideband"}  # uncomment to hide sideband ticks/labels
-    return s
-
-for title, path in SCENES.items():
-    # show the explanation markdown first
-    display(Markdown(f"### {title}\n\n{EXPLAINS.get(title, '')}"))
-
-    data = load_and_split(
-        path,
-        b_tesla=b_tesla,
-        sideband_gap=sideband_gap,
-        attach_to_zeeman=attach_sidebands_to_zeeman,
-    )
+    data = load_and_split(energy_json_path)
     data["title"] = data.get("title") or title
-    plot_energy_levels(data, default_layout(), default_style(), show_axis=False)
+
+    layout_cfg, style_cfg = json_breaker(style_json_path)
+
+    plot_energy_levels(data, layout_cfg, style_cfg, show_axis=False)

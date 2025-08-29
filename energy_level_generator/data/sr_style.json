@@ -1,19 +1,19 @@
 {
-  "schema_version": 1,
-  "experiment": {
-    "ion": "88Sr+",
-    "unit": "cm^-1",
-    "title": "",
-    "b_tesla": 0.01,
-    "sideband_gap": 10.0,
-    "attach_sidebands_to_zeeman": true,
-    "scenes": {
-      "Prep |↓⟩": "energy_level_generator/data/SrPrepDown.json",
-      "Prep |↑⟩": "energy_level_generator/data/SrPrepUp.json",
-      "Detect": "energy_level_generator/data/SrDetect.json",
-      "Doppler Cooling": "energy_level_generator/data/SrDopplerCooling.json",
-      "Sideband Cooling": "energy_level_generator/data/SrSidebandCooling.json"
-    }
+  "layout": {
+    "column_letters": ["S1/2", "P1/2", "P3/2", "D3/2", "D5/2"],
+    "column_positions": [0, 0, 1, 2, 2],
+    "spacing": 1.0,
+    "bar_half": 0.30,
+    "x_jitter": 0.25,
+    "y_jitter": 100.0,
+    "energy_group_key": {
+      "kind": "floor_div",
+      "divisor": 10000
+    },
+    "energy_group_y_scale": 30.0,
+    "sublevel_uniform_spacing": 1000.0,
+    "sublevel_uniform_centered": true,
+    "sideband_vertical_offset": 350.0
   },
   "style": {
     "base_bar_color": "k",
@@ -27,7 +27,7 @@
     "sublevel_tick_color": "red",
     "sublevel_tick_linestyle": "solid",
     "sublevel_tick_line_width": 1.0,
-    "sublevel_tick_length": 0.30,
+    "sublevel_tick_length": 0.3,
 
     "parent_sublevel_tick_color": "black",
     "parent_sublevel_tick_linestyle": "solid",
@@ -54,31 +54,24 @@
 
     "line_width": 0.5,
     "tick_size": 0.3,
+
+    "cmap_sublevels": null,
     "legend_fontsize": 10.0,
     "legend_loc": "lower right",
+
+    "hide_split_types": ["sideband"],
     "F_legend": true,
+
+    "qnum_header_x_shift": 0.045,
+    "qnum_value_x_shift": 0.0,
 
     "show_qnum_header": true,
     "zeeman_label_value_only": true,
-    "qnum_header_x_shift": 0.045,
-    "qnum_value_x_shift": 0.00,
+
     "sublevel_value_fontfamily": "DejaVu Sans Mono",
 
-    "sideband_blue_color": "#2E55D6",
-    "sideband_red_color": "#DC514A",
-    "sideband_tick_length": 0.60,
-
-    "hide_split_types": []
-  },
-  "layout": {
-    "column_letters": ["S1/2", "P1/2", "P3/2", "D3/2", "D5/2"],
-    "column_positions": [0, 0, 1, 2, 2],
-    "spacing": 1.0,
-    "bar_half": 0.30,
-    "x_jitter": 0.25,
-    "y_jitter": 100.0,
-    "energy_group_y_scale": 30.0,
-    "sublevel_uniform_spacing": 1000.0,
-    "sublevel_uniform_centered": true
+    "sideband_blue_color": "blue",
+    "sideband_red_color": "red",
+    "sideband_tick_length": 0.3
   }
 }
