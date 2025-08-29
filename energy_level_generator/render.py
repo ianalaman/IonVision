@@ -152,6 +152,7 @@ def load_and_split(
         attach_sidebands_to_zeeman: bool = True
     ) -> dict:
     """Return a `data` dict ready for `plot_energy_levels`."""
+    path = Path(path)  # <-- coerce here
     raw = json.loads(path.read_text(encoding="utf-8"))
     levels = [Level(**entry) for entry in raw["levels"]]
     data = {

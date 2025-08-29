@@ -1,0 +1,20 @@
+{
+  "title": "process",
+  "ion": "25Qc+",
+  "unit": "cm$^{-1}$",
+
+  "levels": [
+    { "label": "4s  2S1/2", "energy": 0.0, "zeeman": true },
+    { "label": "4p  2P1/2", "energy": 25192.0, "zeeman": true }
+  ],
+
+  "transitions": [
+    { 
+      "from": "4s  2S1/2, m_j=-1/2", 
+      "to": "4p  2P1/2, m_j=+1/2", 
+      "label": "397 nm", 
+      "color": "blue", 
+      "style": "solid" 
+    }
+  ]
+}
