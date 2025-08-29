@@ -22,15 +22,15 @@ extra_css:
 nav:
   - Home: index.md
   - Getting Started:
-      - Installation & Quickstart: notebooks/01_quickstart.md   # pip install + simple example
+      - Installation & Quickstart: notebooks/01_quickstart.md   
   - How-To Guides:
-      - Custom Pulse Sequences: how-to/custom_sequences.md
-      - Extending Energy Level Models: how-to/extending_models.md
+      - Energy Level 101: how-to/energy_level_intro.ipynb
+      - Pulse Sequence 101: how-to/custom_sequences.md
   - NQCC Ion Traps:
-      - Sr88 Energy Level Example: notebooks/energy_level_generator_Sr.ipynb
-      - Sr88 Pulse Sequence Example: notebooks/pulse_sequence_generator_Sr.ipynb   # ← new
-      - Ca+ Energy Level Example: notebooks/energy_level_generator_Ca.ipynb
-      - Ca+ Pulse Sequence Example: notebooks/pulse_sequence_generator_Ca.ipynb    # ← new
+      - ⁸⁸Sr⁺ Energy Level Example: notebooks/energy_level_generator_Sr.ipynb
+      - ⁸⁸Sr⁺ Pulse Sequence Example: notebooks/pulse_sequence_generator_Sr.ipynb   
+      - ⁴³Ca⁺ Energy Level Example: notebooks/energy_level_generator_Ca.ipynb
+      - ⁴³Ca⁺ Pulse Sequence Example: notebooks/pulse_sequence_generator_Ca.ipynb   
   - Why create this toolkit?:
       - Background: explanation/background.md
       - Design Choices: explanation/design.md
@@ -46,6 +46,7 @@ nav:
           - read:     api/energy_level_generator/read.md
           - splitters: api/energy_level_generator/splitters.md
           - style:    api/energy_level_generator/style.md
+          - render: api/energy_level_generator/render.md
       - Pulse Sequence Generator:
           - Overview: api/pulse_sequence_generator/index.md
           - config:   api/pulse_sequence_generator/config.md
