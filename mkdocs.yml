@@ -29,8 +29,8 @@ nav:
   - NQCC Ion Traps:
       - Sr88 Energy Level Example: notebooks/energy_level_generator_Sr.ipynb
       - Sr88 Pulse Sequence Example: notebooks/pulse_sequence_generator_Sr.ipynb   # ← new
-      - Ca+ Energy Level Example: notebooks/03_ca.md
-      - Ca+ Pulse Sequence Example: notebooks/pulse_sequence_Ca.ipynb    # ← new
+      - Ca+ Energy Level Example: notebooks/energy_level_generator_Ca.ipynb
+      - Ca+ Pulse Sequence Example: notebooks/pulse_sequence_generator_Ca.ipynb    # ← new
   - Why create this toolkit?:
       - Background: explanation/background.md
       - Design Choices: explanation/design.md
