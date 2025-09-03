@@ -3,7 +3,9 @@
   <img src="assets/NQCC_logo.png" alt="NQCC logo" width="55%">
 </p>
 
-# Energy Level & Pulse Sequence Generator
+# IonVision
+
+## Energy Level & Pulse Sequence Generator
 
 A compact toolkit from the **National Quantum Computing Centre (NQCC)** for
 **describing and visualising trapped-ion experiments**.  

@@ -34,11 +34,11 @@
     "parent_sublevel_tick_line_width": 1.0,
     "parent_sublevel_tick_length": 0.30,
 
-    "level_label_x_offset": 0.4,
+    "level_label_x_offset": 0.5,
     "level_label_y_offset": 0.0,
     "level_label_fontsize": 15.0,
 
-    "sublevel_label_x_offset": 0.15,
+    "sublevel_label_x_offset": 0.25,
     "sublevel_label_y_offset": 5.0,
     "sublevel_label_y_spacing": 900.0,
     "sublevel_label_fontsize": 9.0,
