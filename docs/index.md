@@ -3,7 +3,9 @@
   <img src="assets/NQCC_logo.png" alt="NQCC logo" width="55%">
 </p>
 
-# Energy Level & Pulse Sequence Generator
+# IonVision
+
+## Energy Level & Pulse Sequence Generator
 
 A compact toolkit from the **National Quantum Computing Centre (NQCC)** for
 **describing and visualising trapped-ion experiments**.  
@@ -92,4 +94,4 @@ These notebooks show the exact inputs and rendered outputs for each species.
 Developed during a summer placement at the National Quantum Computing Centre (NQCC).  
 Thanks to Daisy Smith and the Ion Trap Team for guidance and support.
 
-<small>Source & issues: <https://github.com/ianalaman/NQCC></small>
+<small>Source & issues: <https://github.com/ianalaman/IonVision></small>

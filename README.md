@@ -1,44 +1,27 @@
-# IonVision
+# IonVision  
 
-Python Package to (1) render atomic/ionic **energy-level diagrams** from structured JSON and
-(2) draw **pulse-sequence timelines** for experiments (e.g., 88Sr⁺, Ca⁺).
-The code is split into two small, focused packages:
+IonVision is a Python package developed during my internship at the National Quantum Computing Centre (NQCC). It enables automated rendering of energy-level diagrams and generation of pulse-sequence timelines for trapped-ion quantum computing experiments.  
 
-- `energy_level_generator/` – levels, layouts, splitters (Zeeman, sidebands), plotting.
-- `pulse_sequence_generator/` – sequence model, styling, Matplotlib plotting.
-
-Documentation is built with **MkDocs + Material** and includes runnable demo notebooks.
+[View the documentation and demo site →](https://ianalaman.github.io/IonVision/)  
 
 ---
 
-## Features
+## Features  
 
-- **Physics-aware levels**
-  - LS term parsing (e.g. `5s 2S1/2`)
-  - Zeeman sublevels (m\_j), optional motional sidebands
-  - Deterministic x/y layout (columns by term, grouped energies)
-  - Clean Matplotlib plotter with term symbols and sublevel labels
+- **Energy-Level Diagram Generator**  
+  Generate publication-quality diagrams for arbitrary ionic or atomic level structures. Works with multi-level ions and supports configurable styling (colors, labels, transition strengths, etc.).  
 
-- **Pulse sequences**
-  - Minimal `Sequence` model (channels, time blocks, labels)
-  - Configurable channel order and colors
-  - Publication-ready static timelines
+- **Pulse-Sequence Builder**  
+  Construct pulse sequences (laser or microwave pulses) from YAML-based configuration files. Automatically handles timing, level transitions, and supports multiple pulse types.  
 
-- **Docs & demos**
-  - Notebooks for Sr⁺ level diagrams and pulse sequences
-  - API pages generated directly from docstrings (Google style)
 
 ---
 
-## Install
+##  Installation  
 
 ```bash
-# Create a virtual environment (recommended)
-python -m venv .venv
-# Windows
-.venv\Scripts\activate
-# macOS/Linux
+git clone https://github.com/ianalaman/IonVision.git
+cd IonVision
+python3 -m venv .venv
 source .venv/bin/activate
-
-# Install library + docs dependencies
 pip install -r requirements.txt
