@@ -25,3 +25,14 @@ cd IonVision
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+```
+
+### Windows
+
+```bash
+git clone https://github.com/ianalaman/IonVision.git
+cd IonVision
+python -m venv .venv
+.venv\Scripts\Activate
+pip install -r requirements.txt
+```
