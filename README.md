@@ -19,6 +19,8 @@ IonVision is a Python package developed during my internship at the National Qua
 
 ##  Installation  
 
+### Linux/Mac
+
 ```bash
 git clone https://github.com/ianalaman/IonVision.git
 cd IonVision
