@@ -24,7 +24,7 @@ IonVision is a Python package developed during my internship at the National Qua
 ```bash
 git clone https://github.com/ianalaman/IonVision.git
 cd IonVision
-python3 -m venv .venv
+python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
