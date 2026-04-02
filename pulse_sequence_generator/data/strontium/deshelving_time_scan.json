@@ -1,0 +1,90 @@
+{
+  "name": "QubitScan",
+  "title": "674 Qubit Scan of Strontium (88Sr+)",
+  "pulses": [
+
+    {
+      "channel": "PMT",
+      "t0": 90,
+      "dt": 30,
+      "color": "grey"
+    },
+
+    {
+      "channel": "AOM 422nm σ⁻",
+      "t0": 0,
+      "dt": 30,
+      "color": "#2E55D6"
+    },
+
+    {
+      "channel": "AOM 674nm",
+      "t0": 30,
+      "dt": 30,
+      "color": "#B34ADC"
+    },
+
+    {
+      "channel": "AOM 1033nm",
+      "t0": 0,
+      "dt": 30,
+      "color": "goldenrod"
+    },
+
+    {
+      "channel": "AOM 1092",
+      "t0": 0,
+      "dt": 30,
+      "color": "#DC514A"
+    },
+
+    {
+      "channel": "AOM 1033nm",
+      "t0": 60,
+      "dt": 30,
+      "color": "goldenrod"
+    },
+
+
+    {
+      "channel": "AOM 1092",
+      "t0": 90,
+      "dt": 60,
+      "color": "#DC514A"
+    },
+
+
+    {
+      "channel": "AOM 422nm",
+      "t0": 90,
+      "dt": 60,
+      "color": "#2E55D6"
+    },
+
+
+    {
+      "channel": "AOM 1033nm",
+      "t0": 120,
+      "dt": 30,
+      "color": "goldenrod"
+    }
+
+
+
+  ],
+  "labels": [
+    "$t_{\\mathrm{Prep |↓⟩}}$",
+    "$t_{\\mathrm{Prep |↑⟩}}$",
+    "$t_{\\mathrm{Deshelve}}$",
+    "$t_{\\mathrm{Detect}}$",
+    "$t_{\\mathrm{Doppler}}$"
+  ],
+  "time_boundaries": [
+    0,
+    30,
+    60,
+    90,
+    120,
+    150
+  ]
+}

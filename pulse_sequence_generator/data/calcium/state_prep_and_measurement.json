@@ -1,0 +1,52 @@
+{
+  "name": "Ca43_SPAM",
+  "title": "43Ca+ SPAM: PreCool → StatePrep → Shelving → Readout",
+  "pulses": [
+    {
+      "channel": "EOM 397nm σ+",
+      "t0": 0,
+      "dt": 10,
+      "color": "#2E55D6",
+      "label": "red detune"
+    },
+    {
+      "channel": "AOM 866nm",
+      "t0": 0,
+      "dt": 10,
+      "color": "#DC514A"
+    },
+    {
+      "channel": "AOM 393nm σ+",
+      "t0": 10,
+      "dt": 10,
+      "color": "#2E55D6",
+      "label": "StatePrep: pure σ+; slight red detune"
+    },
+    {
+      "channel": "AOM 850nm σ+",
+      "t0": 10,
+      "dt": 10,
+      "color": "#2E55D6",
+      "label": "StatePrep: pure σ+; slight red detune"
+    },
+    {
+      "channel": "EOM 397nm σ+ (2/3),\n π (1/3)",
+      "t0": 20,
+      "dt": 10,
+      "color": "#2E55D6",
+      "label": "StatePrep: pure σ+; slight red detune"
+    },
+    {
+      "channel": "AOM 866nm",
+      "t0": 20,
+      "dt": 10,
+      "color": "#DC514A"
+    }
+  ],
+  "labels": [
+    "$t_{\\mathrm{StatePrep}}$",
+    "$t_{\\mathrm{Shelving}}$",
+    "$t_{\\mathrm{Readout}}$"
+  ],
+  "time_boundaries": [0, 10, 20, 30]
+}

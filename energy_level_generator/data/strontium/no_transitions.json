@@ -1,0 +1,50 @@
+{
+  "title": "No Transitions",
+  "ion": "88Sr+",
+  "unit": "cm$^{-1}$",
+
+  "levels": [
+    { "label": "5s  2S1/2", "energy": 0.0, "zeeman": true },
+    { "label": "4d  2D3/2", "energy": 14647.0, "zeeman": true },
+    { "label": "4d  2D5/2", "energy": 14995.0, "zeeman": true },
+    { "label": "5p  2P1/2", "energy": 23715.0, "zeeman": true },
+    { "label": "5p  2P3/2", "energy": 24429.0, "zeeman": true }
+  ],
+
+  "transitions": [
+
+
+    { "from": "5p  2P1/2, m_j=+1/2", "to": "5s  2S1/2, m_j=+1/2", "label": "τ = 7.35 ns", "color": "#4C72B0", "style": "dashed", "reversible": false },
+    { "from": "5p  2P1/2, m_j=+1/2", "to": "5s  2S1/2, m_j=-1/2", "color": "#4C72B0", "style": "dashed", "reversible": false },
+    { "from": "5p  2P1/2, m_j=-1/2", "to": "5s  2S1/2, m_j=-1/2", "color": "#4C72B0", "style": "dashed", "reversible": false },
+
+
+    { "from": "5p  2P1/2, m_j=+1/2", "to": "4d  2D3/2, m_j=+3/2", "label": "τ = 105 ns", "color": "#B6496A", "style": "dashed", "reversible": false },
+    { "from": "5p  2P1/2, m_j=+1/2", "to": "4d  2D3/2, m_j=+1/2", "color": "#B6496A", "style": "dashed", "reversible": false },
+    { "from": "5p  2P1/2, m_j=+1/2", "to": "4d  2D3/2, m_j=-1/2", "color": "#B6496A", "style": "dashed", "reversible": false },
+    { "from": "5p  2P1/2, m_j=-1/2", "to": "4d  2D3/2, m_j=+1/2", "color": "#B6496A", "style": "dashed", "reversible": false },
+    { "from": "5p  2P1/2, m_j=-1/2", "to": "4d  2D3/2, m_j=-1/2", "color": "#B6496A", "style": "dashed", "reversible": false },
+    { "from": "5p  2P1/2, m_j=-1/2", "to": "4d  2D3/2, m_j=-3/2", "color": "#B6496A", "style": "dashed", "reversible": false },
+
+    { "from": "5p  2P3/2, m_j=+3/2", "to": "5s  2S1/2, m_j=+1/2", "label": "τ = 6.63 ns", "color": "#55A868", "style": "dashdot", "reversible": false },
+    { "from": "5p  2P3/2, m_j=+1/2", "to": "5s  2S1/2, m_j=+1/2", "color": "#55A868", "style": "dashed", "reversible": false },
+    { "from": "5p  2P3/2, m_j=+1/2", "to": "5s  2S1/2, m_j=-1/2", "color": "#55A868", "style": "dashed", "reversible": false },
+    { "from": "5p  2P3/2, m_j=-1/2", "to": "5s  2S1/2, m_j=-1/2", "color": "#55A868", "style": "dashed", "reversible": false },
+    { "from": "5p  2P3/2, m_j=-1/2", "to": "5s  2S1/2, m_j=+1/2", "color": "#55A868", "style": "dashed", "reversible": false },
+    { "from": "5p  2P3/2, m_j=-3/2", "to": "5s  2S1/2, m_j=-1/2", "color": "#55A868", "style": "dashed", "reversible": false },
+
+    { "from": "5p  2P3/2, m_j=+3/2", "to": "4d  2D5/2, m_j=+5/2", "label": "τ = 115 ns", "color": "#DD8452", "style": "dotdash", "reversible": false },
+    { "from": "5p  2P3/2, m_j=+3/2", "to": "4d  2D5/2, m_j=+3/2", "color": "#DD8452", "style": "dashed", "reversible": false },
+    { "from": "5p  2P3/2, m_j=+3/2", "to": "4d  2D5/2, m_j=+1/2", "color": "#DD8452", "style": "dashed", "reversible": false },
+    { "from": "5p  2P3/2, m_j=+1/2", "to": "4d  2D5/2, m_j=+3/2", "color": "#DD8452", "style": "dashed", "reversible": false },
+    { "from": "5p  2P3/2, m_j=+1/2", "to": "4d  2D5/2, m_j=+1/2", "color": "#DD8452", "style": "dashed", "reversible": false },
+    { "from": "5p  2P3/2, m_j=+1/2", "to": "4d  2D5/2, m_j=-1/2", "color": "#DD8452", "style": "dashed", "reversible": false },
+    { "from": "5p  2P3/2, m_j=-1/2", "to": "4d  2D5/2, m_j=+1/2", "color": "#DD8452", "style": "dashed", "reversible": false },
+    { "from": "5p  2P3/2, m_j=-1/2", "to": "4d  2D5/2, m_j=-1/2", "color": "#DD8452", "style": "dashed", "reversible": false },
+    { "from": "5p  2P3/2, m_j=-1/2", "to": "4d  2D5/2, m_j=-3/2", "color": "#DD8452", "style": "dashed", "reversible": false },
+    { "from": "5p  2P3/2, m_j=-3/2", "to": "4d  2D5/2, m_j=-1/2", "color": "#DD8452", "style": "dashed", "reversible": false },
+    { "from": "5p  2P3/2, m_j=-3/2", "to": "4d  2D5/2, m_j=-3/2", "color": "#DD8452", "style": "dashed", "reversible": false },
+    { "from": "5p  2P3/2, m_j=-3/2", "to": "4d  2D5/2, m_j=-5/2", "color": "#DD8452", "style": "dashed", "reversible": false }
+
+  ]
+}

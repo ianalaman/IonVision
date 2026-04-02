@@ -1,0 +1,96 @@
+site_name: "IonVision"
+site_description: Ion-trap diagram generator toolkit
+site_url: https://ianalaman.github.io/NQCC/
+
+theme:
+  name: material
+  logo: assets/NQCC_white.png
+  favicon: assets/UKRI.jpg
+  palette:
+    - scheme: default
+      primary: "custom"   # use CSS variables below
+      accent: "custom"
+  features:
+    - navigation.sections
+    - search.highlight
+    - content.code.copy
+
+# <-- THIS MUST BE TOP-LEVEL (not under theme)
+extra_css:
+  - styles/nqcc.css
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation & Quickstart: notebooks/01_quickstart.md  
+  - Examples:
+      - ⁸⁸Sr⁺ Energy Level Example: notebooks/energy_level_generator_Sr.ipynb
+      - ⁸⁸Sr⁺ Pulse Sequence Example: notebooks/pulse_sequence_generator_Sr.ipynb    
+  - Customizing Diagrams:
+      - Energy Level Diagram - JSON Format: how-to/energy_level_json.md
+      - Pulse Sequence - JSON Format: how-to/pulse_sequence_json.md
+  - About the Toolkit:
+      - Context: explanation/background.md
+      - Design Choices: explanation/design.md
+      - References: explanation/references.md
+  - API Documentation:
+      - Energy Level Generator:
+          - Overview: api/energy_level_generator/index.md
+          - layout:   api/energy_level_generator/layout.md
+          - format:   api/energy_level_generator/format.md
+          - models:   api/energy_level_generator/models.md
+          - physics:  api/energy_level_generator/physics.md
+          - plotter:  api/energy_level_generator/plotter.md
+          - read:     api/energy_level_generator/read.md
+          - splitters: api/energy_level_generator/splitters.md
+          - style:    api/energy_level_generator/style.md
+          - render: api/energy_level_generator/render.md
+      - Pulse Sequence Generator:
+          - Overview: api/pulse_sequence_generator/index.md
+          - config:   api/pulse_sequence_generator/config.md
+          - core:     api/pulse_sequence_generator/core.md
+          - io:       api/pulse_sequence_generator/io.md
+          - plot:     api/pulse_sequence_generator/plot.md
+          - utils:    api/pulse_sequence_generator/utils.md
+
+plugins:
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_root_toc_entry: false
+            show_object_full_path: false
+            group_by_category: false
+            show_category_heading: true
+            members_order: source
+            show_if_no_docstring: false
+            filters:
+              - "!^_"
+              - "!^__"
+            inherited_members: false
+            merge_init_into_class: true
+            show_root_full_path: true
+            separate_signature: true
+            show_source: true
+  - mkdocs-jupyter:
+      execute: false
+      allow_errors: false
+      hide_stderr: true
+
+
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - attr_list
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.details
+  - pymdownx.tabbed
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
